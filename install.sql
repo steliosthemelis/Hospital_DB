@@ -262,9 +262,10 @@ DROP TABLE IF EXISTS `mydb`.`KEN` ;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`KEN` (
   `ken_code` VARCHAR(10) NOT NULL,
+  `description` VARCHAR(255) NOT NULL,
   `base_cost` DECIMAL(10,2) NOT NULL,
   `avg_stay_days` INT NOT NULL,
-  `extra_day_rate` DECIMAL(10,2) NOT NULL,
+  `extra_day_rate` DECIMAL(10,2) NOT NULL,  
   PRIMARY KEY (`ken_code`))
 ENGINE = InnoDB;
 
