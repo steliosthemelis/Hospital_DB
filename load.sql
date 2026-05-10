@@ -62,4 +62,18 @@ phv_email,
 phv_phone
 );
 
+-- ===========================================
+-- Active Substance
+-- ===========================================
+
+LOAD DATA LOCAL INFILE 'C:/Users/ntoko/Hospital_DB/csv/ACTIVE_SUBSTANCE_utf8.txt'
+INTO TABLE `mydb`.`ACTIVE_SUBSTANCE`
+CHARACTER SET utf8mb4
+FIELDS TERMINATED BY '\t'
+OPTIONALLY ENCLOSED BY '"'
+LINES TERMINATED BY '\r'
+(substance_name);
+
+
 SET FOREIGN_KEY_CHECKS = 1;
+
