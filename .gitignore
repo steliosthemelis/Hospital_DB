@@ -1,6 +1,0 @@
-.vscode/ 
-test.sql
-csv/*.txt
-!csv/*_utf8.txt
-csv/*.xlsx
-csv/*Help*
