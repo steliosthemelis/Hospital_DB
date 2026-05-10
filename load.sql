@@ -33,8 +33,12 @@ CHARACTER SET utf8mb4
 FIELDS TERMINATED BY '\t'
 OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\r'
-IGNORE 1 ROWS
-(`ken_code`, `description`, `base_cost`, `avg_stay_days`, `extra_day_rate`);
+(ken_code, description, @base_cost, @avg_stay_days)
+SET 
+`base_cost` = @base_cost,
+`currency` = 'EUR',
+`avg_stay_days` = @avg_stay_days,
+`extra_day_rate` = @base_cost / @avg_stay_days;
 
 --=========================================
 -- DRUG
@@ -57,10 +61,5 @@ master_file_loc,
 phv_email,
 phv_phone
 );
-
--- Medicines 
--- Active substances
--- DRUG
--- DRUG_has_Active_Substance
 
 SET FOREIGN_KEY_CHECKS = 1;

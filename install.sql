@@ -220,7 +220,9 @@ DROP TABLE IF EXISTS `mydb`.`KEN`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`KEN` (
     `ken_code` VARCHAR(10) NOT NULL,
+    `description` VARCHAR(255) NOT NULL,
     `base_cost` DECIMAL(10, 2) NOT NULL,
+    `currency` VARCHAR(10) NOT NULL,
     `avg_stay_days` INT NOT NULL,
     `extra_day_rate` DECIMAL(10, 2) NOT NULL,
     PRIMARY KEY (`ken_code`)
@@ -1032,7 +1034,7 @@ BEGIN
 
   SELECT Count(*) INTO doc_is_available
   FROM `Medical_Procedures`
-  WHERE DocInCharge_id = NEW.DocInCharge
+  WHERE DocInCharge_id = NEW.DocInCharge_id
   AND start_time < NEW.end_time 
   AND end_time > NEW.start_time;
 
