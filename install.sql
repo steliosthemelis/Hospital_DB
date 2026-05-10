@@ -630,7 +630,8 @@ SET UNIQUE_CHECKS = @OLD_UNIQUE_CHECKS;
 -- -----------------------------------------------------
 -- TRIGGERS
 -- -----------------------------------------------------
-DELIMITER / /
+DELIMITER /
+/
 
 -- 1. Έλεγχος Αλλεργιών
 CREATE Trigger `patient_is_allergic` BEFORE INSERT ON `Perscription` FOR EACH ROW
@@ -647,7 +648,9 @@ BEGIN
     SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Patient is allergic to this medication';
   END IF;
-END //
+END
+/
+/
 
 -- 2. Έλεγχος Επόπτη Ιατρού
 CREATE Trigger `supervisor_invalid` BEFORE INSERT ON `DOCTOR` FOR EACH ROW
@@ -663,7 +666,9 @@ BEGIN
    SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Doctor supervisor is invalid';
   END IF; 
-END //
+END
+/
+/
 
 -- 3. Ελάχιστοι Ιατροί σε Βάρδια (κατά τη διαγραφή)
 CREATE Trigger `shift_not_enough_doc` BEFORE DELETE ON `DOCTOR_has_Shift` FOR EACH ROW
@@ -680,7 +685,9 @@ BEGIN
      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Shift will not have enough doctors';
   END IF;  
-END //
+END
+/
+/
 
 -- 4. Ελάχιστοι Νοσηλευτές σε Βάρδια
 CREATE Trigger `shift_not_enough_nurse` BEFORE DELETE ON `Nurse_has_Shift` FOR EACH ROW
@@ -697,7 +704,9 @@ BEGIN
      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Shift will not have enough nurses';
   END IF;  
-END //
+END
+/
+/
 
 -- 5. Ελάχιστοι Διοικητικοί σε Βάρδια
 CREATE Trigger `shift_not_enough_adm` BEFORE DELETE ON `Administrative_Staff_has_Shift` FOR EACH ROW
@@ -714,7 +723,9 @@ BEGIN
      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Shift will not have enough administrative staff';
   END IF;  
-END //
+END
+/
+/
 
 -- 6. Έλεγχος Βάρδιας Ειδικευόμενου
 CREATE Trigger `intern_shift` BEFORE INSERT ON `DOCTOR_has_Shift` FOR EACH ROW
@@ -741,7 +752,9 @@ BEGIN
         SET MESSAGE_TEXT = 'There are no high rank doctors in this shift for an intern to attend';
     END IF;
   END IF;  
-END //
+END
+/
+/
 
 -- 7. Όρια Βαρδιών Ιατρών
 CREATE Trigger `superseded_shifts_doc` BEFORE INSERT ON `DOCTOR_has_Shift` FOR EACH ROW
