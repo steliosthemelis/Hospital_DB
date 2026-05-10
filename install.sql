@@ -13,6 +13,10 @@ SET
 -- -----------------------------------------------------
 -- Schema mydb
 -- -----------------------------------------------------
+
+-- -----------------------------------------------------
+-- Schema mydb
+-- -----------------------------------------------------
 CREATE SCHEMA IF NOT EXISTS `mydb` DEFAULT CHARACTER SET utf8;
 
 USE `mydb`;
@@ -30,13 +34,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`PERSONNEL` (
     `email` VARCHAR(100) NOT NULL,
     `phone` VARCHAR(20) NOT NULL,
     `hire_date` DATE NOT NULL,
-    `personnel_type` VARCHAR(30) NOT NULL CHECK (
-        personnel_type IN (
-            'DOCTOR',
-            'Nurse',
-            'Administrative_Staff'
-        )
-    ),
+    `personnel_type` VARCHAR(30) NOT NULL,
     PRIMARY KEY (`AMKA`),
     UNIQUE INDEX `email_UNIQUE` (`email` ASC)
 ) ENGINE = InnoDB;
@@ -133,13 +131,7 @@ DROP TABLE IF EXISTS `mydb`.`BEDS`;
 CREATE TABLE IF NOT EXISTS `mydb`.`BEDS` (
     `bed_id` INT NOT NULL AUTO_INCREMENT,
     `type` VARCHAR(45) NOT NULL,
-    `status` VARCHAR(45) NOT NULL CHECK (
-        status IN (
-            'Available',
-            'Unavailable',
-            'Maintenance'
-        )
-    ),
+    `status` VARCHAR(45) NOT NULL,
     `Department_dept_id` VARCHAR(45) NOT NULL,
     PRIMARY KEY (
         `bed_id`,
@@ -196,9 +188,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Emergency_Contact` (
 DROP TABLE IF EXISTS `mydb`.`Shift`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Shift` (
-    `shift_type` VARCHAR(45) NOT NULL CHECK (
-        shift_type IN ('Morning', 'Evening', 'Night')
-    ),
+    `shift_type` VARCHAR(45) NOT NULL,
     `date` DATE NOT NULL,
     `Department_dept_id` VARCHAR(45) NOT NULL,
     PRIMARY KEY (
@@ -218,7 +208,7 @@ DROP TABLE IF EXISTS `mydb`.`ICD-10`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`ICD-10` (
     `ICD-10` VARCHAR(10) NOT NULL,
-    `Description` VARCHAR(255) NOT NULL,
+    `Description` VARCHAR(45) NOT NULL,
     PRIMARY KEY (`ICD-10`),
     UNIQUE INDEX `ICD-10_UNIQUE` (`ICD-10` ASC)
 ) ENGINE = InnoDB;
@@ -244,7 +234,7 @@ DROP TABLE IF EXISTS `mydb`.`Hospitalization`;
 CREATE TABLE IF NOT EXISTS `mydb`.`Hospitalization` (
     `hosp_id` INT NOT NULL,
     `entry_date` DATETIME NOT NULL,
-    `exit_date` DATETIME NOT NULL CHECK (exit_date > entry_date),
+    `exit_date` DATETIME NOT NULL,
     `total_cost` DECIMAL(10, 2) NULL,
     `BEDS_bed_id` INT NOT NULL,
     `BEDS_Department_dept_id` VARCHAR(45) NOT NULL,
@@ -283,7 +273,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Triage` (
     `triage_id` INT NOT NULL,
     `arrival_time` DATETIME NOT NULL,
     `symptoms` VARCHAR(45) NOT NULL,
-    `urgency_level` INT NOT NULL CHECK (urgency_level BETWEEN 1 AND 5),
+    `urgency_level` INT NOT NULL,
     `Nurse_PERSONNEL_AMKA` CHAR(11) NOT NULL,
     `Hospitalization_hosp_id` INT NULL,
     `Patient_AMKA` CHAR(11) NOT NULL,
@@ -342,7 +332,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Medical_Procedures` (
     `duration` INT NOT NULL,
     `cost` DECIMAL(10, 2) NOT NULL,
     `start_time` DATETIME NOT NULL,
-    `end_time` DATETIME NOT NULL CHECK (end_time > start_time),
+    `end_time` DATETIME NOT NULL,
     `ROOM_room_id` INT NOT NULL,
     `DocInCharge_id` CHAR(11) NOT NULL,
     `Hospitalization_hosp_id` INT NOT NULL,
@@ -456,7 +446,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Perscription` (
     `Patient_AMKA` CHAR(11) NOT NULL,
     `DRUG_drug_id` INT NOT NULL,
     `start_date` DATE NOT NULL,
-    `end_date` DATE NOT NULL CHECK (end_date > start_date),
+    `end_date` DATE NOT NULL,
     `dosage` VARCHAR(45) NOT NULL,
     `frequency` VARCHAR(45) NOT NULL,
     `Hospitalization_hosp_id` INT NOT NULL,
@@ -588,12 +578,10 @@ DROP TABLE IF EXISTS `mydb`.`Evaluation`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Evaluation` (
     `eval_id` INT NOT NULL,
-    `nursing_care` INT NOT NULL CHECK (nursing_care BETWEEN 1 AND 5),
-    `Clean` INT NOT NULL CHECK (Clean BETWEEN 1 AND 5),
-    `Food` INT NOT NULL CHECK (Food BETWEEN 1 AND 5),
-    `TotalExperience` INT NOT NULL CHECK (
-        TotalExperience BETWEEN 1 AND 5
-    ),
+    `nursing_care` INT NOT NULL,
+    `Clean` INT NOT NULL,
+    `Food` INT NOT NULL,
+    `TotalExperience` INT NOT NULL,
     `Hospitalization_hosp_id` INT NOT NULL,
     PRIMARY KEY (`eval_id`),
     INDEX `fk_Evaluation_Hospitalization1_idx` (`Hospitalization_hosp_id` ASC),
@@ -607,9 +595,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Evaluation` (
 DROP TABLE IF EXISTS `mydb`.`DoctorEvaluation`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`DoctorEvaluation` (
-    `MedCareQuality` INT NOT NULL CHECK (
-        MedCareQuality BETWEEN 1 AND 5
-    ),
+    `MedCareQuality` INT NOT NULL,
     `eval_id` INT NOT NULL,
     `DOCTOR_PERSONNEL_AMKA` CHAR(11) NOT NULL,
     PRIMARY KEY (
@@ -627,13 +613,8 @@ SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS;
 
 SET UNIQUE_CHECKS = @OLD_UNIQUE_CHECKS;
 
--- -----------------------------------------------------
--- TRIGGERS
--- -----------------------------------------------------
-DELIMITER /
-/
+DELIMITER / /
 
--- 1. Έλεγχος Αλλεργιών
 CREATE Trigger `patient_is_allergic` BEFORE INSERT ON `Perscription` FOR EACH ROW
 BEGIN
   DECLARE is_allergic INT;
@@ -644,15 +625,13 @@ BEGIN
   WHERE pa.Patient_AMKA = NEW.Patient_AMKA
   AND DAS.DRUG_drug_id = NEW.DRUG_drug_id;
 
-  IF is_allergic > 0 THEN
+  IF is_allergic > 0 
+  THEN
     SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Patient is allergic to this medication';
   END IF;
-END
-/
-/
+END //
 
--- 2. Έλεγχος Επόπτη Ιατρού
 CREATE Trigger `supervisor_invalid` BEFORE INSERT ON `DOCTOR` FOR EACH ROW
 BEGIN
   DECLARE is_invalid INT;
@@ -662,15 +641,13 @@ BEGIN
   WHERE d1.PERSONNEL_AMKA = NEW.Supervisor_AMKA
   AND d1.Supervisor_AMKA = NEW.PERSONNEL_AMKA;
 
-  IF is_invalid > 0 THEN
+  IF is_invalid > 0 
+  THEN
    SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Doctor supervisor is invalid';
   END IF; 
-END
-/
-/
+END //
 
--- 3. Ελάχιστοι Ιατροί σε Βάρδια (κατά τη διαγραφή)
 CREATE Trigger `shift_not_enough_doc` BEFORE DELETE ON `DOCTOR_has_Shift` FOR EACH ROW
 BEGIN
   DECLARE number_of_doc INT;
@@ -681,15 +658,13 @@ BEGIN
   AND shift.Shift_date = OLD.Shift_date
   AND shift.Shift_Department_dept_id = OLD.Shift_Department_dept_id;
 
-  IF number_of_doc = 3 THEN
+  IF number_of_doc  = 3
+  THEN
      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Shift will not have enough doctors';
   END IF;  
-END
-/
-/
+END //
 
--- 4. Ελάχιστοι Νοσηλευτές σε Βάρδια
 CREATE Trigger `shift_not_enough_nurse` BEFORE DELETE ON `Nurse_has_Shift` FOR EACH ROW
 BEGIN
   DECLARE number_of_nurse INT;
@@ -700,15 +675,13 @@ BEGIN
   AND shift.Shift_date = OLD.Shift_date
   AND shift.Shift_Department_dept_id = OLD.Shift_Department_dept_id;
 
-  IF number_of_nurse = 6 THEN
+  IF number_of_nurse  = 6
+  THEN
      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Shift will not have enough nurses';
   END IF;  
-END
-/
-/
+END //
 
--- 5. Ελάχιστοι Διοικητικοί σε Βάρδια
 CREATE Trigger `shift_not_enough_adm` BEFORE DELETE ON `Administrative_Staff_has_Shift` FOR EACH ROW
 BEGIN
   DECLARE number_of_adm INT;
@@ -719,65 +692,65 @@ BEGIN
   AND shift.Shift_date = OLD.Shift_date
   AND shift.Shift_Department_dept_id = OLD.Shift_Department_dept_id;
 
-  IF number_of_adm = 2 THEN
+  IF number_of_adm  = 2
+  THEN
      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Shift will not have enough administrative staff';
   END IF;  
-END
-/
-/
+END //
 
--- 6. Έλεγχος Βάρδιας Ειδικευόμενου
 CREATE Trigger `intern_shift` BEFORE INSERT ON `DOCTOR_has_Shift` FOR EACH ROW
 BEGIN
   DECLARE high_rank_doc INT DEFAULT 0;
   DECLARE is_intern INT DEFAULT 0;
 
   SELECT Count(*) INTO is_intern
-  FROM `DOCTOR` 
-  WHERE PERSONNEL_AMKA = NEW.DOCTOR_PERSONNEL_AMKA
+  FROM DOCTOR 
+  WHERE DOCTOR.PERSONNEL_AMKA = NEW.DOCTOR_PERSONNEL_AMKA
   AND Grade = 'Intern';
 
-  IF is_intern > 0 THEN
+  IF is_intern > 0
+  THEN
     SELECT Count(*) INTO high_rank_doc
     FROM `DOCTOR_has_Shift` shift 
     JOIN `DOCTOR` doc ON shift.DOCTOR_PERSONNEL_AMKA = doc.PERSONNEL_AMKA
     WHERE shift.Shift_shift_type = NEW.Shift_shift_type
     AND shift.Shift_date = NEW.Shift_date
     AND shift.Shift_Department_dept_id = NEW.Shift_Department_dept_id
-    AND (doc.Grade = 'Senior Registrar' OR doc.Grade = 'Director');
+    AND(doc.Grade = 'Senior Registrar' OR doc.Grade = 'Director');
   
-    IF high_rank_doc = 0 THEN
+    IF high_rank_doc = 0
+    THEN
        SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'There are no high rank doctors in this shift for an intern to attend';
     END IF;
   END IF;  
-END
-/
-/
+END //
 
--- 7. Όρια Βαρδιών Ιατρών
 CREATE Trigger `superseded_shifts_doc` BEFORE INSERT ON `DOCTOR_has_Shift` FOR EACH ROW
 BEGIN 
   DECLARE number_of_shifts INT;
   DECLARE eight_hour_break INT DEFAULT 0;
   DECLARE night1, night2, night3, night4 INT DEFAULT 0;
 
-  IF NEW.Shift_shift_type = 'Morning' THEN
+  IF NEW.Shift_shift_type = 'Morning'
+  THEN
     SELECT Count(*) INTO eight_hour_break
     FROM `DOCTOR_has_Shift` 
     WHERE DOCTOR_PERSONNEL_AMKA = NEW.DOCTOR_PERSONNEL_AMKA
     AND Shift_shift_type = 'Night'
     AND Shift_date = DATE_SUB(NEW.Shift_date, INTERVAL 1 day);
 
-  ELSEIF NEW.Shift_shift_type = 'Evening' THEN
+  ELSEIF NEW.Shift_shift_type = 'Evening'
+  THEN
     SELECT Count(*) INTO eight_hour_break
     FROM `DOCTOR_has_Shift` 
     WHERE DOCTOR_PERSONNEL_AMKA = NEW.DOCTOR_PERSONNEL_AMKA
     AND Shift_shift_type = 'Morning'
     AND Shift_date = NEW.Shift_date;
   
-  ELSEIF NEW.Shift_shift_type = 'Night' THEN
+  ELSEIF NEW.Shift_shift_type = 'Night'
+  THEN
     SELECT Count(*) INTO eight_hour_break
     FROM `DOCTOR_has_Shift` 
     WHERE DOCTOR_PERSONNEL_AMKA = NEW.DOCTOR_PERSONNEL_AMKA
@@ -785,12 +758,14 @@ BEGIN
     AND Shift_date = NEW.Shift_date;
   END IF;
   
-  IF eight_hour_break > 0 THEN
+  IF eight_hour_break > 0
+  THEN
     SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Doctor needs an eight hour rest';
   END IF;
 
-  IF NEW.Shift_shift_type = 'Night' THEN
+  IF NEW.Shift_shift_type = 'Night'
+  THEN
     SELECT Count(*) INTO night1
     FROM `DOCTOR_has_Shift`
     WHERE DOCTOR_PERSONNEL_AMKA = NEW.DOCTOR_PERSONNEL_AMKA
@@ -827,9 +802,10 @@ BEGIN
       DATE_ADD(NEW.Shift_date, INTERVAL 2 DAY),
       DATE_ADD(NEW.Shift_date, INTERVAL 3 DAY));
     
-    IF (night1 = 3 OR night2 = 3 OR night3 = 3 OR night4 = 3) THEN
+    IF (night1 = 3 OR night2 = 3 OR night3 = 3 OR night4 = 3)
+    THEN
       SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Doctor cannot work for 4 consecutive nights';
+        SET MESSAGE_TEXT = 'Doctor connot work for 4 consecutive nights';
     END IF;
   END IF;
    
@@ -839,7 +815,8 @@ BEGIN
   AND MONTH(shift.Shift_date) = MONTH(NEW.Shift_date)
   AND YEAR(shift.Shift_date) = YEAR(NEW.Shift_date);
 
-  IF number_of_shifts >= 15 THEN
+  IF number_of_shifts = 15
+  THEN
      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Doctor has exceeded his maximum shifts for this month';
   END IF;  
@@ -847,41 +824,39 @@ END
 /
 /
 
--- 8. Όρια Βαρδιών Νοσηλευτών
 CREATE Trigger `superseded_shifts_nurse` BEFORE INSERT ON `Nurse_has_Shift` FOR EACH ROW
 BEGIN 
   DECLARE number_of_shifts INT;
   DECLARE eight_hour_break INT DEFAULT 0;
   DECLARE night1, night2, night3, night4 INT DEFAULT 0;
 
-  IF NEW.Shift_shift_type = 'Morning' THEN
+  IF NEW.Shift_shift_type = 'Morning'
+  THEN
     SELECT Count(*) INTO eight_hour_break
     FROM `Nurse_has_Shift` 
     WHERE Nurse_PERSONNEL_AMKA = NEW.Nurse_PERSONNEL_AMKA
     AND Shift_shift_type = 'Night'
     AND Shift_date = DATE_SUB(NEW.Shift_date, INTERVAL 1 day);
 
-  ELSEIF NEW.Shift_shift_type = 'Evening' THEN
+  ELSEIF NEW.Shift_shift_type = 'Evening'
+  THEN
     SELECT Count(*) INTO eight_hour_break
     FROM `Nurse_has_Shift` 
     WHERE Nurse_PERSONNEL_AMKA = NEW.Nurse_PERSONNEL_AMKA
     AND Shift_shift_type = 'Morning'
     AND Shift_date = NEW.Shift_date;
   
-  ELSEIF NEW.Shift_shift_type = 'Night' THEN
+  ELSEIF NEW.Shift_shift_type = 'Night'
+  THEN
     SELECT Count(*) INTO eight_hour_break
     FROM `Nurse_has_Shift` 
     WHERE Nurse_PERSONNEL_AMKA = NEW.Nurse_PERSONNEL_AMKA
     AND Shift_shift_type = 'Evening'
     AND Shift_date = NEW.Shift_date;
   END IF;
-
-  IF eight_hour_break > 0 THEN
-    SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Nurse needs an eight hour rest';
-  END IF;
   
-  IF NEW.Shift_shift_type = 'Night' THEN
+  IF NEW.Shift_shift_type = 'Night'
+  THEN
     SELECT Count(*) INTO night1
     FROM `Nurse_has_Shift`
     WHERE Nurse_PERSONNEL_AMKA = NEW.Nurse_PERSONNEL_AMKA
@@ -918,10 +893,18 @@ BEGIN
       DATE_ADD(NEW.Shift_date, INTERVAL 2 DAY),
       DATE_ADD(NEW.Shift_date, INTERVAL 3 DAY));
     
-    IF (night1 = 3 OR night2 = 3 OR night3 = 3 OR night4 = 3) THEN
+    IF (night1 = 3 OR night2 = 3 OR night3 = 3 OR night4 = 3)
+    THEN
       SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Nurse cannot work for 4 consecutive nights';
+        SET MESSAGE_TEXT = 'Nurse connot work for 4 consecutive nights';
     END IF;
+  END IF;
+   
+
+  IF eight_hour_break > 0
+  THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Nurse needs an eight hour rest';
   END IF;
 
   SELECT Count(*) INTO number_of_shifts
@@ -930,7 +913,8 @@ BEGIN
   AND MONTH(shift.Shift_date) = MONTH(NEW.Shift_date)
   AND YEAR(shift.Shift_date) = YEAR(NEW.Shift_date);
 
-  IF number_of_shifts >= 20 THEN
+  IF number_of_shifts = 20
+  THEN
      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Nurse has exceeded his maximum shifts for this month';
   END IF;  
@@ -938,28 +922,30 @@ END
 /
 /
 
--- 9. Όρια Βαρδιών Διοικητικών
 CREATE Trigger `superseded_shifts_adm` BEFORE INSERT ON `Administrative_Staff_has_Shift` FOR EACH ROW
 BEGIN 
   DECLARE number_of_shifts INT;
   DECLARE eight_hour_break INT DEFAULT 0;
   DECLARE night1, night2, night3, night4 INT DEFAULT 0;
 
-  IF NEW.Shift_shift_type = 'Morning' THEN
+  IF NEW.Shift_shift_type = 'Morning'
+  THEN
     SELECT Count(*) INTO eight_hour_break
     FROM `Administrative_Staff_has_Shift` 
     WHERE Administrative_Staff_PERSONNEL_AMKA = NEW.Administrative_Staff_PERSONNEL_AMKA
     AND Shift_shift_type = 'Night'
     AND Shift_date = DATE_SUB(NEW.Shift_date, INTERVAL 1 day);
 
-  ELSEIF NEW.Shift_shift_type = 'Evening' THEN
+  ELSEIF NEW.Shift_shift_type = 'Evening'
+  THEN
     SELECT Count(*) INTO eight_hour_break
     FROM `Administrative_Staff_has_Shift` 
     WHERE Administrative_Staff_PERSONNEL_AMKA = NEW.Administrative_Staff_PERSONNEL_AMKA
     AND Shift_shift_type = 'Morning'
     AND Shift_date = NEW.Shift_date;
   
-  ELSEIF NEW.Shift_shift_type = 'Night' THEN
+  ELSEIF NEW.Shift_shift_type = 'Night'
+  THEN
     SELECT Count(*) INTO eight_hour_break
     FROM `Administrative_Staff_has_Shift` 
     WHERE Administrative_Staff_PERSONNEL_AMKA = NEW.Administrative_Staff_PERSONNEL_AMKA
@@ -967,12 +953,8 @@ BEGIN
     AND Shift_date = NEW.Shift_date;
   END IF;
   
-  IF eight_hour_break > 0 THEN
-    SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Administrative employee needs an eight hour rest';
-  END IF;
-
-  IF NEW.Shift_shift_type = 'Night' THEN
+  IF NEW.Shift_shift_type = 'Night'
+  THEN
     SELECT Count(*) INTO night1
     FROM `Administrative_Staff_has_Shift`
     WHERE Administrative_Staff_PERSONNEL_AMKA = NEW.Administrative_Staff_PERSONNEL_AMKA
@@ -1009,10 +991,17 @@ BEGIN
       DATE_ADD(NEW.Shift_date, INTERVAL 2 DAY),
       DATE_ADD(NEW.Shift_date, INTERVAL 3 DAY));
 
-    IF (night1 = 3 OR night2 = 3 OR night3 = 3 OR night4 = 3) THEN
+    IF (night1 = 3 OR night2 = 3 OR night3 = 3 OR night4 = 3)
+    THEN
       SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Administrative employee cannot work for 4 consecutive nights';
+        SET MESSAGE_TEXT = 'Administrative employee connot work for 4 consecutive nights';
     END IF;
+  END IF;
+   
+  IF eight_hour_break > 0
+  THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Administrative employee needs an eight hour rest';
   END IF;
 
   SELECT Count(*) INTO number_of_shifts
@@ -1021,7 +1010,8 @@ BEGIN
   AND MONTH(shift.Shift_date) = MONTH(NEW.Shift_date)
   AND YEAR(shift.Shift_date) = YEAR(NEW.Shift_date);
 
-  IF number_of_shifts >= 25 THEN
+  IF number_of_shifts = 25
+  THEN
      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Administrative employee has exceeded his maximum shifts for this month';
   END IF;  
@@ -1029,7 +1019,6 @@ END
 /
 /
 
--- 10. Διαθεσιμότητα Δωματίου
 CREATE Trigger `room_availability` BEFORE INSERT ON `Medical_Procedures` FOR EACH ROW
 BEGIN
   DECLARE is_available INT DEFAULT 0;
@@ -1040,21 +1029,23 @@ BEGIN
   WHERE ROOM_room_id = NEW.ROOM_room_id
   AND start_time < NEW.end_time 
   AND end_time > NEW.start_time;
-  
+
   SELECT Count(*) INTO doc_is_available
   FROM `Medical_Procedures`
-  WHERE DocInCharge_id = NEW.DocInCharge_id
+  WHERE DocInCharge_id = NEW.DocInCharge
   AND start_time < NEW.end_time 
   AND end_time > NEW.start_time;
 
-  IF doc_is_available > 0 THEN
-    SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Doctor is unavailable for this procedure';
+  IF doc_is_available > 0
+    THEN
+      SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Doctor is unavailable for this procedure';
   END IF; 
 
-  IF is_available > 0 THEN
+  IF is_available > 0
+  THEN
     SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Room is unavailable for this procedure';
+        SET MESSAGE_TEXT = 'Room is unavailable for this procedure';
   END IF;  
 END
 /
