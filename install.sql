@@ -415,7 +415,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`DRUG_has_Active_Substance` (
     CONSTRAINT `fk_DRUG_has_Active_Substance_Active_Substance1` FOREIGN KEY (
         `Active_Substance_substance_id`
     ) REFERENCES `mydb`.`Active_Substance` (`substance_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE = InnoDB;
+) ENGINE = InnoDB;D
 
 -- -----------------------------------------------------
 -- Table `mydb`.`Patient_Allergy`
