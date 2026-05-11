@@ -103,8 +103,5 @@ JOIN DRUG d ON TRIM(LOWER(d.product_name)) = TRIM(LOWER(t.product_name))
 JOIN ACTIVE_SUBSTANCE a ON TRIM(LOWER(a.substance_name)) = TRIM(LOWER(t.active_substance));
 
 
-
-
-
 SET FOREIGN_KEY_CHECKS = 1;
 
