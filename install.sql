@@ -234,7 +234,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`KEN` (
 DROP TABLE IF EXISTS `mydb`.`Hospitalization`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Hospitalization` (
-    `hosp_id` INT NOT NULL,
+    `hosp_id` INT NOT NULL AUTO_INCREMENT,
     `entry_date` DATETIME NOT NULL,
     `exit_date` DATETIME NOT NULL,
     `total_cost` DECIMAL(10, 2) NULL,
@@ -272,7 +272,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Hospitalization` (
 DROP TABLE IF EXISTS `mydb`.`Triage`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Triage` (
-    `triage_id` INT NOT NULL,
+    `triage_id` INT NOT NULL AUTO_INCREMENT,
     `arrival_time` DATETIME NOT NULL,
     `symptoms` VARCHAR(45) NOT NULL,
     `urgency_level` INT NOT NULL,
@@ -315,10 +315,8 @@ CREATE TABLE IF NOT EXISTS `mydb`.`LAB_EXAMS` (
 DROP TABLE IF EXISTS `mydb`.`ROOM`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`ROOM` (
-    `room_id` INT NOT NULL,
-    `room_name` VARCHAR(45) NOT NULL,
+    `room_id` INT NOT NULL AUTO_INCREMENT,
     `room_type` VARCHAR(45) NOT NULL,
-    `capacity` INT NOT NULL,
     PRIMARY KEY (`room_id`)
 ) ENGINE = InnoDB;
 
@@ -579,11 +577,13 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Nurse_has_Shift` (
 DROP TABLE IF EXISTS `mydb`.`Evaluation`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Evaluation` (
-    `eval_id` INT NOT NULL,
-    `nursing_care` INT NOT NULL,
-    `Clean` INT NOT NULL,
-    `Food` INT NOT NULL,
-    `TotalExperience` INT NOT NULL,
+    `eval_id` INT NOT NULL AUTO_INCREMENT,
+    `nursing_care` INT NOT NULL CHECK (nursing_care BETWEEN 1 AND 5),
+    `Clean` INT NOT NULL CHECK (Clean BETWEEN 1 AND 5),
+    `Food` INT NOT NULL CHECK (Food BETWEEN 1 AND 5),
+    `TotalExperience` INT NOT NULL CHECK (
+        TotalExperience BETWEEN 1 AND 5
+    ),
     `Hospitalization_hosp_id` INT NOT NULL,
     PRIMARY KEY (`eval_id`),
     INDEX `fk_Evaluation_Hospitalization1_idx` (`Hospitalization_hosp_id` ASC),
