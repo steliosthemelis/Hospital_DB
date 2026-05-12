@@ -1,38 +1,34 @@
---load.sql
---Data population script for the database Hospital_DB
+--  load.sql
+--  Data population script for the database Hospital_DB
 
---Database's Name 
+--  Database's Name 
 USE mydb;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ========================================
---1.Reference tables
+-- 1.Reference tables
 -- ========================================
 
--- ========================================
--- ICD10 IMPORT
--- ========================================
 
-LOAD DATA LOCAL INFILE 'C:/Users/ntoko/Hospital_DB/csv/icd10_utf8.txt'
+
+LOAD DATA LOCAL INFILE '/Users/steliosthemelis/Hospital_DB/csv/icd10_utf8.txt'
 INTO TABLE `mydb`.`ICD-10`
 CHARACTER SET utf8mb4
 FIELDS TERMINATED BY '\t'
 OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\r'
+LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
 (`ICD-10`, `Description`);
 
--- ========================================
--- KEN IMPORT
--- ========================================
 
-LOAD DATA LOCAL INFILE 'C:/Users/ntoko/Hospital_DB/csv/KEN_utf8.txt'
+
+LOAD DATA LOCAL INFILE '/Users/steliosthemelis/Hospital_DB/csv/KEN_utf8.txt'
 INTO TABLE `mydb`.`KEN`
 CHARACTER SET utf8mb4
 FIELDS TERMINATED BY '\t'
 OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\r'
+LINES TERMINATED BY '\n'
 (ken_code, description, @base_cost, @avg_stay_days)
 SET 
 `base_cost` = @base_cost,
@@ -40,16 +36,14 @@ SET
 `avg_stay_days` = @avg_stay_days,
 `extra_day_rate` = @base_cost / @avg_stay_days;
 
---=========================================
--- DRUG
--- ==========================================
 
-LOAD DATA LOCAL INFILE 'C:/Users/ntoko/Hospital_DB/csv/DRUG_utf8.txt'
+
+LOAD DATA LOCAL INFILE '/Users/steliosthemelis/Hospital_DB/csv/DRUG_utf8.txt'
 INTO TABLE `mydb`.`DRUG`
 CHARACTER SET utf8mb4
 FIELDS TERMINATED BY '\t'
 OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\r'
+LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
 (
 product_name,
@@ -62,21 +56,17 @@ phv_email,
 phv_phone
 );
 
--- ===========================================
--- Active Substance
--- ===========================================
 
-LOAD DATA LOCAL INFILE 'C:/Users/ntoko/Hospital_DB/csv/ACTIVE_SUBSTANCE_utf8.txt'
+
+LOAD DATA LOCAL INFILE '/Users/steliosthemelis/Hospital_DB/csv/ACTIVE_SUBSTANCE_utf8.txt'
 INTO TABLE `mydb`.`Active_Substance`
 CHARACTER SET utf8mb4
 FIELDS TERMINATED BY '\t'
 OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\r'
+LINES TERMINATED BY '\n'
 (substance_name);
 
--- ==========================================
--- DRUG_ACTIVE_SUBSTANCE
--- ==========================================
+
 
 -- Temp table: drug_code -> drug_id mapping (same row order as DRUG_utf8.txt)
 DROP TABLE IF EXISTS temp_drug_codes;
@@ -85,7 +75,7 @@ CREATE TABLE temp_drug_codes (
     drug_code VARCHAR(255)
 );
 
-LOAD DATA LOCAL INFILE 'csv/DRUG_utf8.txt'
+LOAD DATA LOCAL INFILE '/Users/steliosthemelis/Hospital_DB/csv/DRUG_utf8.txt'
 INTO TABLE temp_drug_codes
 CHARACTER SET utf8mb4
 FIELDS TERMINATED BY '\t'
@@ -101,7 +91,7 @@ CREATE TABLE temp_drug_active (
     active_substance VARCHAR(1000)
 );
 
-LOAD DATA LOCAL INFILE 'csv/DRUG_ACTIVE_utf8.txt'
+LOAD DATA LOCAL INFILE '/Users/steliosthemelis/Hospital_DB/csv/DRUG_ACTIVE_utf8.txt'
 INTO TABLE temp_drug_active
 CHARACTER SET utf8mb4
 FIELDS TERMINATED BY '\t'

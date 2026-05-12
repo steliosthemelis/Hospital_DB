@@ -10,20 +10,13 @@ SET
     @OLD_SQL_MODE = @@SQL_MODE,
     SQL_MODE = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
--- -----------------------------------------------------
 -- Schema mydb
--- -----------------------------------------------------
-
--- -----------------------------------------------------
--- Schema mydb
--- -----------------------------------------------------
+-- DROP SCHEMA IF EXISTS `mydb`;
 CREATE SCHEMA IF NOT EXISTS `mydb` DEFAULT CHARACTER SET utf8;
 
 USE `mydb`;
 
--- -----------------------------------------------------
 -- Table `mydb`.`PERSONNEL`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`PERSONNEL`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`PERSONNEL` (
@@ -34,7 +27,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`PERSONNEL` (
     `email` VARCHAR(100) NOT NULL,
     `phone` VARCHAR(20) NOT NULL,
     `hire_date` DATE NOT NULL,
-    `personnel_type` VARCHAR(30) NOT NULL CHECK (personnel_type IN ('Doctor', 'Nurse', 'Administrative_Staff')),
+    `personnel_type` VARCHAR(30) NOT NULL CHECK (personnel_type IN ( 'Doctor', 'Nurse', 'Administrative_Staff' )),
     PRIMARY KEY (`AMKA`),
     UNIQUE INDEX `email_UNIQUE` (`email` ASC),
     CONSTRAINT `chk_personnel_amka_format` CHECK (AMKA REGEXP '^[0-9]{11}$'),
@@ -42,15 +35,13 @@ CREATE TABLE IF NOT EXISTS `mydb`.`PERSONNEL` (
     CONSTRAINT `chk_personnel_email_format` CHECK (email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`DOCTOR`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`DOCTOR`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`DOCTOR` (
     `license_number` VARCHAR(30) NOT NULL,
     `specialty` VARCHAR(50) NOT NULL,
-    `Grade` VARCHAR(30) NOT NULL CHECK (Grade IN ('Intern', 'Supervisor B', 'Supervisor A', 'Director')),
+    `Grade` VARCHAR(30) NOT NULL CHECK (Grade IN ( 'Intern', 'Supervisor B', 'Supervisor A', 'Director' )),
     `PERSONNEL_AMKA` CHAR(11) NOT NULL,
     `Supervisor_AMKA` CHAR(11) NULL,
     PRIMARY KEY (`PERSONNEL_AMKA`),
@@ -64,9 +55,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`DOCTOR` (
     CONSTRAINT `chk_doctor_director_no_supervisor` CHECK (Grade != 'Director' OR Supervisor_AMKA IS NULL)
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`Department`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`Department`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Department` (
@@ -83,25 +72,21 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Department` (
     CONSTRAINT `chk_department_name_not_empty` CHECK (dept_id != '')
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`Nurse`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`Nurse`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Nurse` (
-    `Grade` VARCHAR(30) NOT NULL ,
+    `Grade` VARCHAR(30) NOT NULL,
     `PERSONNEL_AMKA` CHAR(11) NOT NULL,
     `Department_dept_id` VARCHAR(45) NOT NULL,
     PRIMARY KEY (`PERSONNEL_AMKA`),
     INDEX `fk_Nurse_Department1_idx` (`Department_dept_id` ASC),
     CONSTRAINT `fk_Nurse_PERSONNEL1` FOREIGN KEY (`PERSONNEL_AMKA`) REFERENCES `mydb`.`PERSONNEL` (`AMKA`) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `fk_Nurse_Department1` FOREIGN KEY (`Department_dept_id`) REFERENCES `mydb`.`Department` (`dept_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT `chk_nurse_grade` CHECK (Grade IN ('Nurse Assistant', 'Nurse', 'Supervisor Nurse'))
+    CONSTRAINT `chk_nurse_grade` CHECK (Grade IN ( 'Nurse Assistant', 'Nurse', 'Supervisor Nurse' ))
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`Administrative_Staff`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`Administrative_Staff`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Administrative_Staff` (
@@ -114,27 +99,20 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Administrative_Staff` (
     CONSTRAINT `fk_Administrative_Staff_Department1` FOREIGN KEY (`Department_dept_id`) REFERENCES `mydb`.`Department` (`dept_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`DOCTOR_has_Department`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`DOCTOR_has_Department`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`DOCTOR_has_Department` (
     `DOCTOR_PERSONNEL_AMKA` CHAR(11) NOT NULL,
     `Department_dept_id` VARCHAR(45) NOT NULL,
-    PRIMARY KEY (
-        `DOCTOR_PERSONNEL_AMKA`,
-        `Department_dept_id`
-    ),
+    PRIMARY KEY (`DOCTOR_PERSONNEL_AMKA`, `Department_dept_id`),
     INDEX `fk_DOCTOR_has_Department_Department1_idx` (`Department_dept_id` ASC),
     INDEX `fk_DOCTOR_has_Department_DOCTOR1_idx` (`DOCTOR_PERSONNEL_AMKA` ASC),
     CONSTRAINT `fk_DOCTOR_has_Department_DOCTOR1` FOREIGN KEY (`DOCTOR_PERSONNEL_AMKA`) REFERENCES `mydb`.`DOCTOR` (`PERSONNEL_AMKA`) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `fk_DOCTOR_has_Department_Department1` FOREIGN KEY (`Department_dept_id`) REFERENCES `mydb`.`Department` (`dept_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`BEDS`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`BEDS`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`BEDS` (
@@ -142,18 +120,13 @@ CREATE TABLE IF NOT EXISTS `mydb`.`BEDS` (
     `type` VARCHAR(45) NOT NULL,
     `status` VARCHAR(45) NOT NULL,
     `Department_dept_id` VARCHAR(45) NOT NULL,
-    PRIMARY KEY (
-        `bed_id`,
-        `Department_dept_id`
-    ),
+    PRIMARY KEY (`bed_id`, `Department_dept_id`),
     INDEX `fk_BEDS_Department1_idx` (`Department_dept_id` ASC),
     CONSTRAINT `fk_BEDS_Department1` FOREIGN KEY (`Department_dept_id`) REFERENCES `mydb`.`Department` (`dept_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT `chk_bed_status` CHECK (status IN ('Available', 'Occupied', 'Maintenance'))
+    CONSTRAINT `chk_bed_status` CHECK (status IN ( 'Available', 'Occupied', 'Maintenance' ))
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`Patient`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`Patient`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Patient` (
@@ -173,20 +146,20 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Patient` (
     `insurance_type` VARCHAR(45) NOT NULL,
     PRIMARY KEY (`AMKA`),
     UNIQUE INDEX `AMKA_UNIQUE` (`AMKA` ASC),
-    CONSTRAINT `chk_patient_age`CHECK (age >= 0 AND age <= 180),
+    CONSTRAINT `chk_patient_age` CHECK (age >= 0 AND age <= 180),
     CONSTRAINT `chk_patient_gender` CHECK (gender IN ('Male', 'Female', 'Other')),
     CONSTRAINT `chk_patient_weight` CHECK (weight IS NULL OR weight > 0),
     CONSTRAINT `chk_patient_height` CHECK (height IS NULL OR height > 0),
     CONSTRAINT `chk_patient_phone_format` CHECK (phone REGEXP '^[0-9+][0-9 -]{9,}$'),
-    CONSTRAINT `chk_patient_email_format` CHECK (email IS NULL OR email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
+    CONSTRAINT `chk_patient_email_format` CHECK (
+        email IS NULL
+        OR email REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
+    ),
     CONSTRAINT `chk_patient_amka_format` CHECK (AMKA REGEXP '^[0-9]{11}$'),
     CONSTRAINT `chk_patient_insurance_type` CHECK (insurance_type IN ('EFKA', 'Private', 'None'))
-
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`Emergency_Contact`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`Emergency_Contact`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Emergency_Contact` (
@@ -202,28 +175,20 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Emergency_Contact` (
     CONSTRAINT `chk_emergency_contact_phone_format` CHECK (phone REGEXP '^[0-9+][0-9 -]{9,}$')
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`Shift`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`Shift`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Shift` (
     `shift_type` VARCHAR(45) NOT NULL,
     `date` DATE NOT NULL,
     `Department_dept_id` VARCHAR(45) NOT NULL,
-    PRIMARY KEY (
-        `shift_type`,
-        `date`,
-        `Department_dept_id`
-    ),
+    PRIMARY KEY (`shift_type`, `date`, `Department_dept_id`),
     INDEX `fk_Shift_Department1_idx` (`Department_dept_id` ASC),
     CONSTRAINT `fk_Shift_Department1` FOREIGN KEY (`Department_dept_id`) REFERENCES `mydb`.`Department` (`dept_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT `chk_shift_type` CHECK (shift_type IN ('Morning', 'Afternoon', 'Night'))
+    CONSTRAINT `chk_shift_type` CHECK (shift_type IN ( 'Morning', 'Afternoon', 'Night' ))
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`ICD-10`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`ICD-10`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`ICD-10` (
@@ -233,9 +198,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`ICD-10` (
     UNIQUE INDEX `ICD-10_UNIQUE` (`ICD-10` ASC)
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`KEN`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`KEN`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`KEN` (
@@ -251,9 +214,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`KEN` (
     CONSTRAINT `chk_ken_extra_day_rate` CHECK (extra_day_rate >= 0)
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`Hospitalization`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`Hospitalization`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Hospitalization` (
@@ -268,10 +229,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Hospitalization` (
     `ICD-10_out` VARCHAR(10) NULL,
     `KEN_ken_code` VARCHAR(10) NOT NULL,
     PRIMARY KEY (`hosp_id`),
-    INDEX `fk_Hospitalization_BEDS1_idx` (
-        `BEDS_bed_id` ASC,
-        `BEDS_Department_dept_id` ASC
-    ),
+    INDEX `fk_Hospitalization_BEDS1_idx` (`BEDS_bed_id` ASC, `BEDS_Department_dept_id` ASC),
     INDEX `fk_Hospitalization_Patient1_idx` (`Patient_AMKA` ASC),
     INDEX `fk_Hospitalization_ICD-101_idx` (`ICD-10_in` ASC),
     INDEX `fk_Hospitalization_ICD-102_idx` (`ICD-10_out` ASC),
@@ -291,9 +249,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Hospitalization` (
     CONSTRAINT `chk_hospitalization_total_cost` CHECK (total_cost >= 0 OR total_cost IS NULL)
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`Triage`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`Triage`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Triage` (
@@ -312,12 +268,9 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Triage` (
     CONSTRAINT `fk_Triage_Hospitalization1` FOREIGN KEY (`Hospitalization_hosp_id`) REFERENCES `mydb`.`Hospitalization` (`hosp_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `fk_Triage_Patient1` FOREIGN KEY (`Patient_AMKA`) REFERENCES `mydb`.`Patient` (`AMKA`) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `chk_triage_urgency_level` CHECK (urgency_level >= 1 AND urgency_level <= 5)
-
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`LAB_EXAMS`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`LAB_EXAMS`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`LAB_EXAMS` (
@@ -335,12 +288,9 @@ CREATE TABLE IF NOT EXISTS `mydb`.`LAB_EXAMS` (
     CONSTRAINT `fk_LAB_EXAMS_Hospitalization1` FOREIGN KEY (`Hospitalization_hosp_id`) REFERENCES `mydb`.`Hospitalization` (`hosp_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `fk_LAB_EXAMS_DOCTOR1` FOREIGN KEY (`DOCTOR_PERSONNEL_AMKA`) REFERENCES `mydb`.`DOCTOR` (`PERSONNEL_AMKA`) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `chk_lab_exams_cost` CHECK (cost >= 0)
-
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`ROOM`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`ROOM`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`ROOM` (
@@ -349,9 +299,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`ROOM` (
     PRIMARY KEY (`room_id`)
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`Medical_Procedures`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`Medical_Procedures`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Medical_Procedures` (
@@ -375,21 +323,16 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Medical_Procedures` (
     CONSTRAINT `chk_medical_procedures_duration` CHECK (duration > 0),
     CONSTRAINT `chk_medical_procedures_cost` CHECK (cost >= 0),
     CONSTRAINT `chk_medical_procedures_time` CHECK (end_time > start_time),
-    CONSTRAINT `chk_medical_procedures_category` CHECK (category IN ('Surgery', 'Therapy', 'Diagnostic'))
+    CONSTRAINT `chk_medical_procedures_category` CHECK (category IN ( 'Surgery', 'Therapy', 'Diagnostic' ))
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`Procedure_Team`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`Procedure_Team`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Procedure_Team` (
     `Medical_Procedures_procedure_id` INT NOT NULL,
     `PERSONNEL_AMKA` CHAR(11) NOT NULL,
-    PRIMARY KEY (
-        `Medical_Procedures_procedure_id`,
-        `PERSONNEL_AMKA`
-    ),
+    PRIMARY KEY (`Medical_Procedures_procedure_id`, `PERSONNEL_AMKA`),
     INDEX `fk_Procedure_Team_PERSONNEL1_idx` (`PERSONNEL_AMKA` ASC),
     CONSTRAINT `fk_Procedure_Team_Medical_Procedures1` FOREIGN KEY (
         `Medical_Procedures_procedure_id`
@@ -397,9 +340,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Procedure_Team` (
     CONSTRAINT `fk_Procedure_Team_PERSONNEL1` FOREIGN KEY (`PERSONNEL_AMKA`) REFERENCES `mydb`.`PERSONNEL` (`AMKA`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`DRUG`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`DRUG`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`DRUG` (
@@ -416,9 +357,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`DRUG` (
     CONSTRAINT `chk_drug_phv_phone_format` CHECK (phv_phone REGEXP '^[0-9+][0-9 -]{9,}$')
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`Active_Substance`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`Active_Substance`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Active_Substance` (
@@ -427,21 +366,14 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Active_Substance` (
     PRIMARY KEY (`substance_id`)
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`DRUG_has_Active_Substance`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`DRUG_has_Active_Substance`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`DRUG_has_Active_Substance` (
     `DRUG_drug_id` INT NOT NULL,
     `Active_Substance_substance_id` INT NOT NULL,
-    PRIMARY KEY (
-        `DRUG_drug_id`,
-        `Active_Substance_substance_id`
-    ),
-    INDEX `fk_DRUG_has_Active_Substance_Active_Substance1_idx` (
-        `Active_Substance_substance_id` ASC
-    ),
+    PRIMARY KEY (`DRUG_drug_id`, `Active_Substance_substance_id`),
+    INDEX `fk_DRUG_has_Active_Substance_Active_Substance1_idx` (`Active_Substance_substance_id` ASC),
     INDEX `fk_DRUG_has_Active_Substance_DRUG1_idx` (`DRUG_drug_id` ASC),
     CONSTRAINT `fk_DRUG_has_Active_Substance_DRUG1` FOREIGN KEY (`DRUG_drug_id`) REFERENCES `mydb`.`DRUG` (`drug_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `fk_DRUG_has_Active_Substance_Active_Substance1` FOREIGN KEY (
@@ -449,30 +381,21 @@ CREATE TABLE IF NOT EXISTS `mydb`.`DRUG_has_Active_Substance` (
     ) REFERENCES `mydb`.`Active_Substance` (`substance_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`Patient_Allergy`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`Patient_Allergy`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Patient_Allergy` (
     `Patient_AMKA` CHAR(11) NOT NULL,
     `Active_Substance_substance_id` INT NOT NULL,
-    PRIMARY KEY (
-        `Patient_AMKA`,
-        `Active_Substance_substance_id`
-    ),
-    INDEX `fk_Patient_Allergy_Active_Substance1_idx` (
-        `Active_Substance_substance_id` ASC
-    ),
+    PRIMARY KEY (`Patient_AMKA`, `Active_Substance_substance_id`),
+    INDEX `fk_Patient_Allergy_Active_Substance1_idx` (`Active_Substance_substance_id` ASC),
     CONSTRAINT `fk_Patient_Allergy_Patient1` FOREIGN KEY (`Patient_AMKA`) REFERENCES `mydb`.`Patient` (`AMKA`) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `fk_Patient_Allergy_Active_Substance1` FOREIGN KEY (
         `Active_Substance_substance_id`
     ) REFERENCES `mydb`.`Active_Substance` (`substance_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`Perscription`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`Perscription`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Perscription` (
@@ -484,12 +407,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Perscription` (
     `dosage` VARCHAR(45) NOT NULL,
     `frequency` VARCHAR(45) NOT NULL,
     `Hospitalization_hosp_id` INT NOT NULL,
-    PRIMARY KEY (
-        `PERSONNEL_AMKA`,
-        `Patient_AMKA`,
-        `DRUG_drug_id`,
-        `start_date`
-    ),
+    PRIMARY KEY (`PERSONNEL_AMKA`, `Patient_AMKA`, `DRUG_drug_id`, `start_date`),
     INDEX `fk_Perscription_Patient1_idx` (`Patient_AMKA` ASC),
     INDEX `fk_Perscription_DRUG1_idx` (`DRUG_drug_id` ASC),
     INDEX `fk_Perscription_Hospitalization1_idx` (`Hospitalization_hosp_id` ASC),
@@ -500,9 +418,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Perscription` (
     CONSTRAINT `chk_perscription_dates` CHECK (end_date >= start_date)
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`DOCTOR_has_Shift`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`DOCTOR_has_Shift`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`DOCTOR_has_Shift` (
@@ -510,17 +426,8 @@ CREATE TABLE IF NOT EXISTS `mydb`.`DOCTOR_has_Shift` (
     `Shift_shift_type` VARCHAR(45) NOT NULL,
     `Shift_date` DATE NOT NULL,
     `Shift_Department_dept_id` VARCHAR(45) NOT NULL,
-    PRIMARY KEY (
-        `DOCTOR_PERSONNEL_AMKA`,
-        `Shift_shift_type`,
-        `Shift_date`,
-        `Shift_Department_dept_id`
-    ),
-    INDEX `fk_DOCTOR_has_Shift_Shift1_idx` (
-        `Shift_shift_type` ASC,
-        `Shift_date` ASC,
-        `Shift_Department_dept_id` ASC
-    ),
+    PRIMARY KEY (`DOCTOR_PERSONNEL_AMKA`, `Shift_shift_type`, `Shift_date`, `Shift_Department_dept_id`),
+    INDEX `fk_DOCTOR_has_Shift_Shift1_idx` (`Shift_shift_type` ASC, `Shift_date` ASC, `Shift_Department_dept_id` ASC),
     INDEX `fk_DOCTOR_has_Shift_DOCTOR1_idx` (`DOCTOR_PERSONNEL_AMKA` ASC),
     CONSTRAINT `fk_DOCTOR_has_Shift_DOCTOR1` FOREIGN KEY (`DOCTOR_PERSONNEL_AMKA`) REFERENCES `mydb`.`DOCTOR` (`PERSONNEL_AMKA`) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `fk_DOCTOR_has_Shift_Shift1` FOREIGN KEY (
@@ -534,9 +441,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`DOCTOR_has_Shift` (
     ) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`Administrative_Staff_has_Shift`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`Administrative_Staff_has_Shift`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Administrative_Staff_has_Shift` (
@@ -544,20 +449,13 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Administrative_Staff_has_Shift` (
     `Shift_shift_type` VARCHAR(45) NOT NULL,
     `Shift_date` DATE NOT NULL,
     `Shift_Department_dept_id` VARCHAR(45) NOT NULL,
-    PRIMARY KEY (
-        `Administrative_Staff_PERSONNEL_AMKA`,
-        `Shift_shift_type`,
-        `Shift_date`,
-        `Shift_Department_dept_id`
-    ),
+    PRIMARY KEY (`Administrative_Staff_PERSONNEL_AMKA`, `Shift_shift_type`, `Shift_date`, `Shift_Department_dept_id`),
     INDEX `fk_Administrative_Staff_has_Shift_Shift1_idx` (
         `Shift_shift_type` ASC,
         `Shift_date` ASC,
         `Shift_Department_dept_id` ASC
     ),
-    INDEX `fk_Administrative_Staff_has_Shift_Administrative_Staff1_idx` (
-        `Administrative_Staff_PERSONNEL_AMKA` ASC
-    ),
+    INDEX `fk_Administrative_Staff_has_Shift_Administrative_Staff1_idx` (`Administrative_Staff_PERSONNEL_AMKA` ASC),
     CONSTRAINT `fk_Administrative_Staff_has_Shift_Administrative_Staff1` FOREIGN KEY (
         `Administrative_Staff_PERSONNEL_AMKA`
     ) REFERENCES `mydb`.`Administrative_Staff` (`PERSONNEL_AMKA`) ON DELETE NO ACTION ON UPDATE NO ACTION,
@@ -572,9 +470,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Administrative_Staff_has_Shift` (
     ) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`Nurse_has_Shift`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`Nurse_has_Shift`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Nurse_has_Shift` (
@@ -582,17 +478,8 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Nurse_has_Shift` (
     `Shift_shift_type` VARCHAR(45) NOT NULL,
     `Shift_date` DATE NOT NULL,
     `Shift_Department_dept_id` VARCHAR(45) NOT NULL,
-    PRIMARY KEY (
-        `Nurse_PERSONNEL_AMKA`,
-        `Shift_shift_type`,
-        `Shift_date`,
-        `Shift_Department_dept_id`
-    ),
-    INDEX `fk_Nurse_has_Shift_Shift1_idx` (
-        `Shift_shift_type` ASC,
-        `Shift_date` ASC,
-        `Shift_Department_dept_id` ASC
-    ),
+    PRIMARY KEY (`Nurse_PERSONNEL_AMKA`, `Shift_shift_type`, `Shift_date`, `Shift_Department_dept_id`),
+    INDEX `fk_Nurse_has_Shift_Shift1_idx` (`Shift_shift_type` ASC, `Shift_date` ASC, `Shift_Department_dept_id` ASC),
     INDEX `fk_Nurse_has_Shift_Nurse1_idx` (`Nurse_PERSONNEL_AMKA` ASC),
     CONSTRAINT `fk_Nurse_has_Shift_Nurse1` FOREIGN KEY (`Nurse_PERSONNEL_AMKA`) REFERENCES `mydb`.`Nurse` (`PERSONNEL_AMKA`) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `fk_Nurse_has_Shift_Shift1` FOREIGN KEY (
@@ -606,9 +493,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Nurse_has_Shift` (
     ) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`Evaluation`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`Evaluation`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Evaluation` (
@@ -616,9 +501,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Evaluation` (
     `nursing_care` INT NOT NULL CHECK (nursing_care BETWEEN 1 AND 5),
     `Clean` INT NOT NULL CHECK (Clean BETWEEN 1 AND 5),
     `Food` INT NOT NULL CHECK (Food BETWEEN 1 AND 5),
-    `TotalExperience` INT NOT NULL CHECK (
-        TotalExperience BETWEEN 1 AND 5
-    ),
+    `TotalExperience` INT NOT NULL CHECK (TotalExperience BETWEEN 1 AND 5),
     `Hospitalization_hosp_id` INT NOT NULL,
     PRIMARY KEY (`eval_id`),
     INDEX `fk_Evaluation_Hospitalization1_idx` (`Hospitalization_hosp_id` ASC),
@@ -630,19 +513,14 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Evaluation` (
     CONSTRAINT `chk_evaluation_total_experience` CHECK (TotalExperience >= 1 AND TotalExperience <= 5)
 ) ENGINE = InnoDB;
 
--- -----------------------------------------------------
 -- Table `mydb`.`DoctorEvaluation`
--- -----------------------------------------------------
 DROP TABLE IF EXISTS `mydb`.`DoctorEvaluation`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`DoctorEvaluation` (
     `MedCareQuality` INT NOT NULL,
     `eval_id` INT NOT NULL,
     `DOCTOR_PERSONNEL_AMKA` CHAR(11) NOT NULL,
-    PRIMARY KEY (
-        `eval_id`,
-        `DOCTOR_PERSONNEL_AMKA`
-    ),
+    PRIMARY KEY (`eval_id`, `DOCTOR_PERSONNEL_AMKA`),
     INDEX `fk_DoctorEvaluation_DOCTOR1_idx` (`DOCTOR_PERSONNEL_AMKA` ASC),
     CONSTRAINT `fk_DoctorEvaluation_Evaluation1` FOREIGN KEY (`eval_id`) REFERENCES `mydb`.`Evaluation` (`eval_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `fk_DoctorEvaluation_DOCTOR1` FOREIGN KEY (`DOCTOR_PERSONNEL_AMKA`) REFERENCES `mydb`.`DOCTOR` (`PERSONNEL_AMKA`) ON DELETE NO ACTION ON UPDATE NO ACTION,
@@ -654,6 +532,12 @@ SET SQL_MODE = @OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS;
 
 SET UNIQUE_CHECKS = @OLD_UNIQUE_CHECKS;
+
+DELIMITER //
+
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `patient_is_allergic`;
 
 DELIMITER //
 
@@ -672,7 +556,15 @@ BEGIN
     SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Patient is allergic to this medication';
   END IF;
-END //
+END
+/
+/
+
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `supervisor_invalid`;
+
+DELIMITER //
 
 CREATE Trigger `supervisor_invalid` BEFORE INSERT ON `DOCTOR` FOR EACH ROW
 BEGIN
@@ -688,7 +580,15 @@ BEGIN
    SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Doctor supervisor is invalid';
   END IF; 
-END //
+END
+/
+/
+
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `shift_not_enough_doc`;
+
+DELIMITER //
 
 CREATE Trigger `shift_not_enough_doc` BEFORE DELETE ON `DOCTOR_has_Shift` FOR EACH ROW
 BEGIN
@@ -705,7 +605,15 @@ BEGIN
      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Shift will not have enough doctors';
   END IF;  
-END //
+END
+/
+/
+
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `shift_not_enough_nurse`;
+
+DELIMITER //
 
 CREATE Trigger `shift_not_enough_nurse` BEFORE DELETE ON `Nurse_has_Shift` FOR EACH ROW
 BEGIN
@@ -722,7 +630,15 @@ BEGIN
      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Shift will not have enough nurses';
   END IF;  
-END //
+END
+/
+/
+
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `shift_not_enough_adm`;
+
+DELIMITER //
 
 CREATE Trigger `shift_not_enough_adm` BEFORE DELETE ON `Administrative_Staff_has_Shift` FOR EACH ROW
 BEGIN
@@ -739,7 +655,15 @@ BEGIN
      SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Shift will not have enough administrative staff';
   END IF;  
-END //
+END
+/
+/
+
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `intern_shift`;
+
+DELIMITER //
 
 CREATE Trigger `intern_shift` BEFORE INSERT ON `DOCTOR_has_Shift` FOR EACH ROW
 BEGIN
@@ -767,7 +691,15 @@ BEGIN
         SET MESSAGE_TEXT = 'There are no high rank doctors in this shift for an intern to attend';
     END IF;
   END IF;  
-END //
+END
+/
+/
+
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `superseded_shifts_doc`;
+
+DELIMITER //
 
 CREATE Trigger `superseded_shifts_doc` BEFORE INSERT ON `DOCTOR_has_Shift` FOR EACH ROW
 BEGIN 
@@ -863,7 +795,14 @@ BEGIN
       SET MESSAGE_TEXT = 'Doctor has exceeded his maximum shifts for this month';
   END IF;  
 END
-//
+/
+/
+
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `superseded_shifts_nurse`;
+
+DELIMITER //
 
 CREATE Trigger `superseded_shifts_nurse` BEFORE INSERT ON `Nurse_has_Shift` FOR EACH ROW
 BEGIN 
@@ -960,7 +899,14 @@ BEGIN
       SET MESSAGE_TEXT = 'Nurse has exceeded his maximum shifts for this month';
   END IF;  
 END
-//
+/
+/
+
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `superseded_shifts_adm`;
+
+DELIMITER //
 
 CREATE Trigger `superseded_shifts_adm` BEFORE INSERT ON `Administrative_Staff_has_Shift` FOR EACH ROW
 BEGIN 
@@ -1056,7 +1002,14 @@ BEGIN
       SET MESSAGE_TEXT = 'Administrative employee has exceeded his maximum shifts for this month';
   END IF;  
 END
-//
+/
+/
+
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `room_availability`;
+
+DELIMITER //
 
 CREATE Trigger `room_availability` BEFORE INSERT ON `Medical_Procedures` FOR EACH ROW
 BEGIN
@@ -1086,9 +1039,17 @@ BEGIN
     SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Room is unavailable for this procedure';
   END IF;  
-END //
+END
+/
+/
 
---Trigger: We calculate the base cost when we know entry and exit date
+-- Trigger: We calculate the base cost when we know entry and exit date
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `calculate_hospitalization_cost`;
+
+DELIMITER //
+
 CREATE TRIGGER `calculate_hospitalization_cost` 
 BEFORE INSERT ON `Hospitalization`
 FOR EACH ROW
@@ -1115,9 +1076,17 @@ BEGIN
 
         SET NEW.total_cost = final_cost;
     END IF;
-END //
+END
+/
+/
 
---Trigger: Calculate the cost when exit date takes a value(NOT NULL anymore)
+-- Trigger: Calculate the cost when exit date takes a value(NOT NULL anymore)
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `calculate_hosp_cost_update`;
+
+DELIMITER //
+
 CREATE TRIGGER `calculate_hosp_cost_update`
 BEFORE UPDATE ON `Hospitalization`
 FOR EACH ROW
@@ -1142,23 +1111,43 @@ BEGIN
 
         SET NEW.total_cost = final_cost;
     END IF;
-END //
+END
+/
+/
 
---Trigger: Before insert a Hospitalization check if the chosen bed is available
+-- Trigger: Before insert a Hospitalization check if the chosen bed is available
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `bed_availability_before_hospitalization`;
+
+DELIMITER //
+
 CREATE TRIGGER `bed_availability_before_hospitalization`
 BEFORE INSERT ON `Hospitalization`
 FOR EACH ROW
 BEGIN
-    DECLARE bed_status VARCHAR(45);
-    SELECT status INTO bed_status FROM BEDS
-    WHERE bed_id = NEW.BEDS_bed_id AND Department_dept_id = NEW.BEDS_Department_dept_id;
-    IF bed_status != 'Available' THEN
+    DECLARE overlapping_days INT DEFAULT 0;
+    SELECT Count(*) INTO overlapping_days 
+    FROM `Hospitalization`
+    WHERE bed_id = NEW.BEDS_bed_id 
+    AND Department_dept_id = NEW.BEDS_Department_dept_id;
+    AND entry_date <= IFNULL(NEW.exit_date, '2099-12-31')
+    AND IFNULL(exit_date, '2099-12-31') >= NEW.entry_date;
+    IF overlapping_days > 0 THEN
         SIGNAL SQLSTATE '45000' 
             SET MESSAGE_TEXT = 'Bed occupied or under maintenance';
     END IF;
-END//
+END
+/
+/
 
---Trigger: After I insert a Hospitalization I want the bed to become unavailable
+-- Trigger: After I insert a Hospitalization I want the bed to become unavailable
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `bed_status_after_hospitalization`;
+
+DELIMITER //
+
 CREATE TRIGGER `bed_status_after_hospitalization`
 AFTER INSERT ON `Hospitalization`
 FOR EACH ROW 
@@ -1167,9 +1156,17 @@ BEGIN
     SET status = 'Occupied'
     WHERE bed_id = NEW.BEDS_bed_id
         AND Department_dept_id = NEW.BEDS_Department_dept_id;
-END//
+END
+/
+/
 
---Trigger: After I update a hospitalization I need the room to become available again
+-- Trigger: After I update a hospitalization I need the room to become available again
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `bed_after_discharge`;
+
+DELIMITER //
+
 CREATE TRIGGER `bed_after_discharge`
 AFTER UPDATE ON `Hospitalization`
 FOR EACH ROW
@@ -1180,9 +1177,17 @@ BEGIN
         WHERE bed_id = NEW.BEDS_bed_id 
             AND Department_dept_id = NEW.BEDS_Department_dept_id;
     END IF;
-END//
+END
+/
+/
 
---Trigger: We calculate the duration of medical_proc when start and end time are known
+-- Trigger: We calculate the duration of medical_proc when start and end time are known
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `med_proc_duration`;
+
+DELIMITER //
+
 CREATE TRIGGER `med_proc_duration`
 BEFORE INSERT ON `Medical_Procedures`
 FOR EACH ROW 
@@ -1192,11 +1197,18 @@ BEGIN
     ELSE
         SET NEW.duration = NULL;
     END IF;
-END//
+END
+/
+/
 
---Trigger: We calculate the duration when end_time takes a value
+-- Trigger: We calculate the duration when end_time takes a value
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS `med_proc_duration_update`;
+
+DELIMITER //
+
 CREATE TRIGGER `med_proc_duration_update`
-BEFORE UPDATE ON `Medical_Procedures`
 FOR EACH ROW
 BEGIN
     IF NEW.end_time IS NOT NULL THEN 
@@ -1204,6 +1216,8 @@ BEGIN
     ELSE 
         SET NEW.duration = NULL;
     END IF;
-END //
+END
+/
+/
 
 DELIMITER ;
