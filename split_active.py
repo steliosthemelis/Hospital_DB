@@ -25,22 +25,24 @@ enc_drug = detect_encoding(input_drug_active)
 print(f"Encoding for DRUG_ACTIVE: {enc_drug}")
 with open(input_drug_active, 'r', encoding=enc_drug) as infile, \
      open(output_drug_active_split, 'w', encoding='utf-8', newline='') as outfile:
-    reader = csv.reader(infile, delimiter='\t')
-    writer = csv.writer(outfile, delimiter='\t')
-    for row in reader:
-        if len(row) < 2:
+    for line in infile:
+        line = line.rstrip('\n\r')
+        if not line.strip():
             continue
-        product = row[0].strip()
-        substances = row[1].strip()
+        parts = line.split('\t')
+        if len(parts) < 2:
+            print(f"Warning: line without tab: {line[:50]}...")
+            continue
+        product = parts[0].strip()
+        substances = parts[1].strip()
         if not product or not substances:
             continue
         for s in substances.split('|'):
             s = s.strip()
             if s:
-                writer.writerow([product, s])
+                outfile.write(f"{product}\t{s}\n")
 
 print(f"Split DRUG_ACTIVE done. Output: {output_drug_active_split}")
-
 # 2. Split Active_Substance
 print("Processing Active_Substance...")
 enc_sub = detect_encoding(input_active_substance)
@@ -60,4 +62,4 @@ with open(input_active_substance, 'r', encoding=enc_sub) as infile, \
             if s:
                 writer.writerow([s])
 
-print(f"Split Active_Substance done. Output: {output_active_substance_split}")
+print(f"Split Active_Substance done. Output: {output_active_substance_split}") 
