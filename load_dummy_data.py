@@ -93,7 +93,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
     f.write("-- Αρχείο Φόρτωσης Δεδομένων Λειτουργίας\n")
     f.write("USE `mydb`;\n\n")
 
-    # ── PERSONNEL ──────────────────────────────────────────────────────────────
+    # personnel
 
     f.write("INSERT INTO `PERSONNEL` (`AMKA`, `name`, `surname`, `age`, `email`, `phone`, `hire_date`, `personnel_type`) VALUES\n")
 
@@ -148,7 +148,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         else:
             f.write(line + ",\n")
 
-    # ── DOCTOR ─────────────────────────────────────────────────────────────────
+    # doctor
 
     f.write("INSERT INTO `DOCTOR` (`license_number`, `specialty`, `Grade`, `PERSONNEL_AMKA`, `Supervisor_AMKA`) VALUES\n")
 
@@ -197,7 +197,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         else:
             f.write(line + ",\n")
 
-    # ── DEPARTMENT ─────────────────────────────────────────────────────────────
+    # department
 
     f.write("INSERT INTO `Department` (`num_of_beds`, `building`, `level`, `dept_id`, `Director_AMKA`) VALUES\n")
 
@@ -215,7 +215,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         else:
             f.write(line + ",\n")
 
-    # ── BEDS ───────────────────────────────────────────────────────────────────
+    # beds
 
     f.write("INSERT INTO `BEDS` (`bed_id`, `type`, `status`, `Department_dept_id`) VALUES\n")
 
@@ -237,7 +237,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
             else:
                 f.write(line + ",\n")
 
-    # ── NURSE ──────────────────────────────────────────────────────────────────
+    # nurse
 
     f.write("INSERT INTO `Nurse` (`Grade`, `PERSONNEL_AMKA`, `Department_dept_id`) VALUES\n")
 
@@ -259,7 +259,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
     if not emergency_nurses:
         emergency_nurses = nurse_amkas[:]
 
-    # ── ADMINISTRATIVE STAFF ───────────────────────────────────────────────────
+    # administrative staff
 
     f.write("INSERT INTO `Administrative_Staff` (`duties`, `PERSONNEL_AMKA`, `Department_dept_id`) VALUES\n")
 
@@ -283,7 +283,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         else:
             f.write(line + ",\n")
 
-    # ── ROOM ───────────────────────────────────────────────────────────────────
+    # room
 
     f.write("INSERT INTO `ROOM` (`room_id`, `room_type`) VALUES\n")
 
@@ -296,7 +296,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         else:
             f.write(line + ",\n")
 
-    # ── PATIENT ────────────────────────────────────────────────────────────────
+    # patient
 
     f.write("INSERT INTO `Patient` (`AMKA`, `first_name`, `last_name`, `father_name`, `age`, `gender`, `weight`, `height`, `address`, `phone`, `email`, `profession`, `nationality`, `insurance_type`) VALUES\n")
 
@@ -342,7 +342,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         else:
             f.write(line + ",\n")
 
-    # ── EMERGENCY CONTACT ──────────────────────────────────────────────────────
+    # emergency contact
 
     f.write("INSERT INTO `Emergency_Contact` (`first_name`, `last_name`, `phone`, `relationship`, `Patient_AMKA`) VALUES\n")
 
@@ -362,7 +362,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
             else:
                 f.write(line + ",\n")
 
-    # ── PATIENT ALLERGY ────────────────────────────────────────────────────────
+    # patient allergy
 
     f.write("INSERT INTO `Patient_Allergy` (`Patient_AMKA`, `Active_Substance_substance_id`) VALUES\n")
 
@@ -380,7 +380,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
 
     f.write(",\n".join(allergy_lines) + ";\n\n")
 
-    # ── DOCTOR_HAS_DEPARTMENT ──────────────────────────────────────────────────
+    # doctor_has_department
 
     f.write("INSERT INTO `DOCTOR_has_Department` (`DOCTOR_PERSONNEL_AMKA`, `Department_dept_id`) VALUES\n")
 
@@ -405,7 +405,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
             else:
                 f.write(line + ",\n")
 
-    # ── HOSPITALIZATION ────────────────────────────────────────────────────────
+    # hospitalization
 
     f.write("INSERT INTO `Hospitalization` (`entry_date`, `exit_date`, `total_cost`, `BEDS_bed_id`, `BEDS_Department_dept_id`, `Patient_AMKA`, `ICD-10_in`, `ICD-10_out`, `KEN_ken_code`) VALUES\n")
 
@@ -461,7 +461,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         else:
             f.write(line + ",\n")
 
-    # ── TRIAGE ─────────────────────────────────────────────────────────────────
+    # triage
 
     f.write("INSERT INTO `Triage` (`arrival_time`, `symptoms`, `urgency_level`, `Nurse_PERSONNEL_AMKA`, `Hospitalization_hosp_id`, `Patient_AMKA`) VALUES\n")
 
@@ -525,7 +525,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         else:
             f.write(line + ",\n")
 
-    # ── SHIFTS ─────────────────────────────────────────────────────────────────
+    # shifts
 
     f.write("INSERT INTO `Shift` (`shift_type`, `date`, `Department_dept_id`) VALUES\n")
 
@@ -544,7 +544,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
                 else:
                     f.write(line + ",\n")
 
-    # ── DOCTOR_HAS_SHIFT ───────────────────────────────────────────────────────
+    # doctor_has_shift
 
     all_personnel = doctor_amkas + nurse_amkas + administrative_staff_amkas
     person_schedule = {amka: {} for amka in all_personnel}
@@ -582,7 +582,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
                     else:
                         f.write(line + ",\n")
 
-    # ── NURSE_HAS_SHIFT ────────────────────────────────────────────────────────
+    # nurse_has_shift
 
     f.write("INSERT INTO `Nurse_has_Shift` (`Nurse_PERSONNEL_AMKA`, `Shift_shift_type`, `Shift_date`, `Shift_Department_dept_id`) VALUES\n")
 
@@ -607,7 +607,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
                     else:
                         f.write(line + ",\n")
 
-    # ── ADMINISTRATIVE_STAFF_HAS_SHIFT ─────────────────────────────────────────
+    # administrative_staff_has_shift
 
     f.write("INSERT INTO `Administrative_Staff_has_Shift` (`Administrative_Staff_PERSONNEL_AMKA`, `Shift_shift_type`, `Shift_date`, `Shift_Department_dept_id`) VALUES\n")
 
@@ -632,7 +632,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
                     else:
                         f.write(line + ",\n")
 
-    # ── LAB EXAMS ──────────────────────────────────────────────────────────────
+    # lab exams
 
     f.write("INSERT INTO `LAB_EXAMS` (`type`, `date`, `result`, `unit`, `cost`, `Hospitalization_hosp_id`, `DOCTOR_PERSONNEL_AMKA`) VALUES \n")
 
@@ -696,7 +696,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         else:
             f.write(line + ",\n")
 
-    # ── EVALUATION ─────────────────────────────────────────────────────────────
+    # evaluation
 
     f.write("INSERT INTO `Evaluation` (`nursing_care`, `Clean`, `Food`, `TotalExperience`, `Hospitalization_hosp_id`) VALUES\n")
 
@@ -717,7 +717,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
 
     f.write(",\n".join(eval_lines) + ";\n\n")
 
-    # ── MEDICAL PROCEDURES ─────────────────────────────────────────────────────
+    # medical procedures
 
     f.write("INSERT INTO `Medical_Procedures` (`name`, `category`, `duration`, `cost`, `start_time`, `end_time`, `ROOM_room_id`, `DocInCharge_id`, `Hospitalization_hosp_id`) VALUES\n")
 
@@ -797,7 +797,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
 
     f.write(",\n".join(proc_lines) + ";\n\n")
 
-    # ── PROCEDURE TEAM ─────────────────────────────────────────────────────────
+    # procedure team
 
     f.write("INSERT INTO `Procedure_Team` (`Medical_Procedures_procedure_id`, `PERSONNEL_AMKA`) VALUES\n")
 
@@ -808,7 +808,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         else:
             f.write(line + ",\n")
 
-    # ── PRESCRIPTION ───────────────────────────────────────────────────────────
+    # prescription
 
     f.write("INSERT INTO `Prescription` (`PERSONNEL_AMKA`, `Patient_AMKA`, `DRUG_drug_id`, `start_date`, `end_date`, `dosage`, `frequency`, `Hospitalization_hosp_id`) VALUES\n")
 
@@ -860,7 +860,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
 
     f.write(",\n".join(line_presc) + ";\n\n")
 
-    # ── DOCTOR EVALUATION ──────────────────────────────────────────────────────
+    # doctor evaluation
 
     f.write("INSERT INTO `DoctorEvaluation` (`MedCareQuality`, `eval_id`, `DOCTOR_PERSONNEL_AMKA`) VALUES\n")
 
