@@ -410,43 +410,35 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
     f.write("INSERT INTO `Hospitalization` (`entry_date`, `exit_date`, `total_cost`, `BEDS_bed_id`, `BEDS_Department_dept_id`, `Patient_AMKA`, `ICD-10_in`, `ICD-10_out`, `KEN_ken_code`) VALUES\n")
 
     all_hospitalizations = []
-    bed_schedules = {pair: [] for pair in beds_available}
+    remaining_beds = beds_available[:]
+    random.shuffle(remaining_beds)
 
-    for i in range(500):
+    num_hosps = min(500, len(remaining_beds))
+    for i in range(num_hosps):
         amka = random.choice(patient_amkas)
-        valid_slot_found = False
-        while not valid_slot_found:
-            bed_pair = random.choice(beds_available)
-            b_id, d_id = bed_pair
-            start_date = fake.date_between(start_date='-5y', end_date='today')
-            is_active = random.choices([True, False], weights=[10, 90], k=1)[0]
-            if is_active:
-                end_date = start_date + timedelta(days=365)
-            else:
-                days_in_hospital = random.randint(1, 15)
-                end_date = start_date + timedelta(days=days_in_hospital)
-            overlap = False
-            for existing_start, existing_end in bed_schedules[bed_pair]:
-                if start_date <= existing_end and end_date >= existing_start:
-                    overlap = True
-                    break
-            if not overlap:
-                valid_slot_found = True
-                bed_schedules[bed_pair].append((start_date, end_date))
-                final_end_date = None if is_active else end_date
-                icd_in = random.choice(icd10_codes)
-                icd_out = random.choice(icd10_codes) if not is_active else None
-                ken = random.choice(ken_codes)
-                all_hospitalizations.append({
-                    'amka': amka,
-                    'bed_id': b_id,
-                    'dept_id': d_id,
-                    'entry': start_date,
-                    'exit': final_end_date,
-                    'icd_in': icd_in,
-                    'icd_out': icd_out,
-                    'ken': ken
-                })
+        bed_pair = remaining_beds[i]
+        b_id, d_id = bed_pair
+        start_date = fake.date_between(start_date='-5y', end_date='today')
+        is_active = random.choices([True, False], weights=[10, 90], k=1)[0]
+        if is_active:
+            final_end_date = None
+            icd_out = None
+        else:
+            days_in_hospital = random.randint(1, 15)
+            final_end_date = start_date + timedelta(days=days_in_hospital)
+            icd_out = random.choice(icd10_codes)
+        icd_in = random.choice(icd10_codes)
+        ken = random.choice(ken_codes)
+        all_hospitalizations.append({
+            'amka': amka,
+            'bed_id': b_id,
+            'dept_id': d_id,
+            'entry': start_date,
+            'exit': final_end_date,
+            'icd_in': icd_in,
+            'icd_out': icd_out,
+            'ken': ken
+        })
 
     all_hospitalizations.sort(key=lambda x: x['entry'])
 
@@ -456,7 +448,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         exit_str = f"'{h['exit'].strftime('%Y-%m-%d')}'" if h['exit'] else "NULL"
         icd_out_val = f"'{h['icd_out']}'" if h['icd_out'] else "NULL"
         line = f"('{entry_str}', {exit_str}, 0.00, {h['bed_id']}, '{h['dept_id']}', '{h['amka']}', '{h['icd_in']}', {icd_out_val}, '{h['ken']}')"
-        if i == 499:
+        if i == len(all_hospitalizations) - 1:
             f.write(line + ";\n\n")
         else:
             f.write(line + ",\n")

@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`DOCTOR` (
     `specialty` VARCHAR(50) NOT NULL,
     `Grade` VARCHAR(30) NOT NULL CHECK (Grade IN ('Intern', 'Supervisor B', 'Supervisor A', 'Director')),
     `PERSONNEL_AMKA` CHAR(11) NOT NULL,
-    `Supervisor_AMKA` CHAR(11) NOT NULL,
+    `Supervisor_AMKA` CHAR(11) NULL,
     PRIMARY KEY (`PERSONNEL_AMKA`),
     INDEX `Supervisor_AMKA_idx` (`Supervisor_AMKA` ASC),
     UNIQUE INDEX `license_number_UNIQUE` (`license_number` ASC),
@@ -216,7 +216,6 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Shift` (
         `date`,
         `Department_dept_id`
     ),
-    UNIQUE INDEX `unique_shift` (`date` ASC, `shift_type` ASC),
     INDEX `fk_Shift_Department1_idx` (`Department_dept_id` ASC),
     CONSTRAINT `fk_Shift_Department1` FOREIGN KEY (`Department_dept_id`) REFERENCES `mydb`.`Department` (`dept_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `chk_shift_type` CHECK (shift_type IN ('Morning', 'Afternoon', 'Night'))
@@ -260,13 +259,13 @@ DROP TABLE IF EXISTS `mydb`.`Hospitalization`;
 CREATE TABLE IF NOT EXISTS `mydb`.`Hospitalization` (
     `hosp_id` INT NOT NULL AUTO_INCREMENT,
     `entry_date` DATETIME NOT NULL,
-    `exit_date` DATETIME NOT NULL,
+    `exit_date` DATETIME NULL,
     `total_cost` DECIMAL(10, 2) NULL,
     `BEDS_bed_id` INT NOT NULL,
     `BEDS_Department_dept_id` VARCHAR(45) NOT NULL,
     `Patient_AMKA` CHAR(11) NOT NULL,
     `ICD-10_in` VARCHAR(10) NOT NULL,
-    `ICD-10_out` VARCHAR(10) NOT NULL,
+    `ICD-10_out` VARCHAR(10) NULL,
     `KEN_ken_code` VARCHAR(10) NOT NULL,
     PRIMARY KEY (`hosp_id`),
     INDEX `fk_Hospitalization_BEDS1_idx` (
@@ -385,7 +384,6 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Medical_Procedures` (
 DROP TABLE IF EXISTS `mydb`.`Procedure_Team`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Procedure_Team` (
-    `role` VARCHAR(45) NOT NULL,
     `Medical_Procedures_procedure_id` INT NOT NULL,
     `PERSONNEL_AMKA` CHAR(11) NOT NULL,
     PRIMARY KEY (
@@ -761,7 +759,7 @@ BEGIN
     WHERE shift.Shift_shift_type = NEW.Shift_shift_type
     AND shift.Shift_date = NEW.Shift_date
     AND shift.Shift_Department_dept_id = NEW.Shift_Department_dept_id
-    AND(doc.Grade = 'Senior Registrar' OR doc.Grade = 'Director');
+    AND(doc.Grade = 'Supervisor A' OR doc.Grade = 'Director');
   
     IF high_rank_doc = 0
     THEN
