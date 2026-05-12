@@ -12,11 +12,11 @@ def can_assign(amka, shift_type, shift_date, person_schedule, person_monthly, mo
         date_to_check = shift_date - timedelta(days=1)
         if person_schedule[amka].get(date_to_check) == 'Night':
             result = False
-    if shift_type == 'Evening':
+    if shift_type == 'Afternoon':
         if person_schedule[amka].get(shift_date) == 'Morning':
             result = False
     if shift_type == 'Night':
-        if person_schedule[amka].get(shift_date) == 'Evening':
+        if person_schedule[amka].get(shift_date) == 'Afternoon':
             result = False
         night_shifts = True
         for i in range(1, 4):
@@ -529,7 +529,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
 
     f.write("INSERT INTO `Shift` (`shift_type`, `date`, `Department_dept_id`) VALUES\n")
 
-    shift_types_list = ['Morning', 'Evening', 'Night']
+    shift_types_list = ['Morning', 'Afternoon', 'Night']
     today = datetime.today().date()
 
     for i in range(7):
@@ -722,30 +722,30 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
     f.write("INSERT INTO `Medical_Procedures` (`name`, `category`, `duration`, `cost`, `start_time`, `end_time`, `ROOM_room_id`, `DocInCharge_id`, `Hospitalization_hosp_id`) VALUES\n")
 
     procedures_catalog = [
-        ('Σκωληκοειδεκτομή',                      'Χειρουργική',  60,  800.00),
-        ('Λαπαροσκοπική Χολοκυστεκτομή',           'Χειρουργική',  90, 1200.00),
-        ('Καισαρική Τομή',                          'Χειρουργική',  50, 1000.00),
-        ('Αρθροπλαστική Γόνατος',                   'Χειρουργική', 150, 3500.00),
-        ('Αρθροπλαστική Ισχίου',                    'Χειρουργική', 180, 4000.00),
-        ('Εγχείρηση Καταρράκτη',                    'Χειρουργική',  40,  600.00),
-        ('Θυρεοειδεκτομή',                          'Χειρουργική', 120, 1500.00),
-        ('Μαστεκτομή',                              'Χειρουργική', 150, 2000.00),
-        ('Κήλη (Πλαστική Αποκατάσταση)',             'Χειρουργική',  75,  900.00),
-        ('Αορτοστεφανιαία Παράκαμψη (Bypass)',       'Χειρουργική', 240, 8000.00),
-        ('Γαστροσκόπηση',                           'Διαγνωστική',  30,  150.00),
-        ('Κολονοσκόπηση',                           'Διαγνωστική',  45,  200.00),
-        ('Βρογχοσκόπηση',                           'Διαγνωστική',  40,  250.00),
-        ('Βιοψία Ήπατος',                           'Διαγνωστική',  45,  300.00),
-        ('Οσφυονωτιαία Παρακέντηση',                'Διαγνωστική',  30,  180.00),
-        ('Στεφανιογραφία',                          'Διαγνωστική',  60,  600.00),
-        ('Βιοψία Μυελού των Οστών',                 'Διαγνωστική',  40,  350.00),
-        ('Αγγειοπλαστική (Μπαλονάκι/Stent)',         'Θεραπευτική',  90, 2500.00),
-        ('Αιμοκάθαρση',                             'Θεραπευτική', 240,  150.00),
-        ('Χημειοθεραπεία (Συνεδρία)',               'Θεραπευτική', 120,  400.00),
-        ('Ακτινοθεραπεία (Συνεδρία)',               'Θεραπευτική',  20,  100.00),
-        ('Μετάγγιση Αίματος',                       'Θεραπευτική',  90,  120.00),
-        ('Εξωσωματική Λιθοτριψία',                  'Θεραπευτική',  60,  500.00),
-        ('Καθαρισμός / Συρραφή Τραύματος',          'Θεραπευτική',  30,   80.00),
+        ('Σκωληκοειδεκτομή',                      'Surgery',  60,  800.00),
+        ('Λαπαροσκοπική Χολοκυστεκτομή',           'Surgery',  90, 1200.00),
+        ('Καισαρική Τομή',                          'Surgery',  50, 1000.00),
+        ('Αρθροπλαστική Γόνατος',                   'Surgery', 150, 3500.00),
+        ('Αρθροπλαστική Ισχίου',                    'Surgery', 180, 4000.00),
+        ('Εγχείρηση Καταρράκτη',                    'Surgery',  40,  600.00),
+        ('Θυρεοειδεκτομή',                          'Surgery', 120, 1500.00),
+        ('Μαστεκτομή',                              'Surgery', 150, 2000.00),
+        ('Κήλη (Πλαστική Αποκατάσταση)',             'Surgery',  75,  900.00),
+        ('Αορτοστεφανιαία Παράκαμψη (Bypass)',       'Surgery', 240, 8000.00),
+        ('Γαστροσκόπηση',                           'Diagnostic',  30,  150.00),
+        ('Κολονοσκόπηση',                           'Diagnostic',  45,  200.00),
+        ('Βρογχοσκόπηση',                           'Diagnostic',  40,  250.00),
+        ('Βιοψία Ήπατος',                           'Diagnostic',  45,  300.00),
+        ('Οσφυονωτιαία Παρακέντηση',                'Diagnostic',  30,  180.00),
+        ('Στεφανιογραφία',                          'Diagnostic',  60,  600.00),
+        ('Βιοψία Μυελού των Οστών',                 'Diagnostic',  40,  350.00),
+        ('Αγγειοπλαστική (Μπαλονάκι/Stent)',         'Therapy',  90, 2500.00),
+        ('Αιμοκάθαρση',                             'Therapy', 240,  150.00),
+        ('Χημειοθεραπεία (Συνεδρία)',               'Therapy', 120,  400.00),
+        ('Ακτινοθεραπεία (Συνεδρία)',               'Therapy',  20,  100.00),
+        ('Μετάγγιση Αίματος',                       'Therapy',  90,  120.00),
+        ('Εξωσωματική Λιθοτριψία',                  'Therapy',  60,  500.00),
+        ('Καθαρισμός / Συρραφή Τραύματος',          'Therapy',  30,   80.00),
     ]
 
     room_schedule = {}
@@ -810,7 +810,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
 
     # prescription
 
-    f.write("INSERT INTO `Prescription` (`PERSONNEL_AMKA`, `Patient_AMKA`, `DRUG_drug_id`, `start_date`, `end_date`, `dosage`, `frequency`, `Hospitalization_hosp_id`) VALUES\n")
+    f.write("INSERT INTO `Perscription` (`PERSONNEL_AMKA`, `Patient_AMKA`, `DRUG_drug_id`, `start_date`, `end_date`, `dosage`, `frequency`, `Hospitalization_hosp_id`) VALUES\n")
 
     dosages = [
         "500 mg", "1000 mg", "250 mg", "20 mg", "40 mg", "100 mg",
