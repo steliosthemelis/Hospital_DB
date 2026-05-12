@@ -53,6 +53,7 @@ FIELDS TERMINATED BY '\t'
 OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\r\n'
 (
+@drug_id,
 product_name,
 @active_substance,
 route_of_admin,
