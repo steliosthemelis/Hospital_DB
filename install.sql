@@ -425,7 +425,7 @@ DROP TABLE IF EXISTS `mydb`.`Active_Substance`;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Active_Substance` (
     `substance_id` INT NOT NULL AUTO_INCREMENT,
-    `substance_name` VARCHAR(45) NOT NULL,
+    `substance_name` VARCHAR(255) NOT NULL,
     PRIMARY KEY (`substance_id`)
 ) ENGINE = InnoDB;
 
