@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`DOCTOR` (
     `specialty` VARCHAR(50) NOT NULL,
     `Grade` VARCHAR(30) NOT NULL CHECK (Grade IN ('Intern', 'Supervisor B', 'Supervisor A', 'Director')),
     `PERSONNEL_AMKA` CHAR(11) NOT NULL,
-    `Supervisor_AMKA` CHAR(11) NULL,
+    `Supervisor_AMKA` CHAR(11) NOT NULL,
     PRIMARY KEY (`PERSONNEL_AMKA`),
     INDEX `Supervisor_AMKA_idx` (`Supervisor_AMKA` ASC),
     UNIQUE INDEX `license_number_UNIQUE` (`license_number` ASC),
@@ -198,7 +198,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Emergency_Contact` (
     `Patient_AMKA` CHAR(11) NOT NULL,
     PRIMARY KEY (`contact_id`, `Patient_AMKA`),
     INDEX `fk_Emergency_Contact_Patient1_idx` (`Patient_AMKA` ASC),
-    CONSTRAINT `fk_Emergency_Contact_Patient1` FOREIGN KEY (`Patient_AMKA`) REFERENCES `mydb`.`Patient` (`AMKA`) ON DELETE NO ACTION ON UPDATE NO ACTION
+    CONSTRAINT `fk_Emergency_Contact_Patient1` FOREIGN KEY (`Patient_AMKA`) REFERENCES `mydb`.`Patient` (`AMKA`) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `chk_emergency_contact_phone_format` CHECK (phone REGEXP '^[0-9+][0-9 -]{9,}$')
 ) ENGINE = InnoDB;
 
@@ -246,7 +246,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`KEN` (
     `currency` VARCHAR(10) NOT NULL,
     `avg_stay_days` INT NOT NULL,
     `extra_day_rate` DECIMAL(10, 2) NOT NULL,
-    PRIMARY KEY (`ken_code`)
+    PRIMARY KEY (`ken_code`),
     CONSTRAINT `chk_ken_base_cost` CHECK (base_cost >= 0),
     CONSTRAINT `chk_ken_avg_stay_days` CHECK (avg_stay_days > 0),
     CONSTRAINT `chk_ken_extra_day_rate` CHECK (extra_day_rate >= 0)
@@ -312,8 +312,8 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Triage` (
     CONSTRAINT `fk_Triage_Nurse1` FOREIGN KEY (`Nurse_PERSONNEL_AMKA`) REFERENCES `mydb`.`Nurse` (`PERSONNEL_AMKA`) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `fk_Triage_Hospitalization1` FOREIGN KEY (`Hospitalization_hosp_id`) REFERENCES `mydb`.`Hospitalization` (`hosp_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `fk_Triage_Patient1` FOREIGN KEY (`Patient_AMKA`) REFERENCES `mydb`.`Patient` (`AMKA`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT `chk_triage_urgency_level` CHECK (urgency_level >= 1 AND urgency_level <= 5),
-    CONSTRAINT `chk_triage_arrival_time` CHECK (arrival_time <= NOW())
+    CONSTRAINT `chk_triage_urgency_level` CHECK (urgency_level >= 1 AND urgency_level <= 5)
+
 ) ENGINE = InnoDB;
 
 -- -----------------------------------------------------
@@ -335,8 +335,8 @@ CREATE TABLE IF NOT EXISTS `mydb`.`LAB_EXAMS` (
     INDEX `fk_LAB_EXAMS_DOCTOR1_idx` (`DOCTOR_PERSONNEL_AMKA` ASC),
     CONSTRAINT `fk_LAB_EXAMS_Hospitalization1` FOREIGN KEY (`Hospitalization_hosp_id`) REFERENCES `mydb`.`Hospitalization` (`hosp_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `fk_LAB_EXAMS_DOCTOR1` FOREIGN KEY (`DOCTOR_PERSONNEL_AMKA`) REFERENCES `mydb`.`DOCTOR` (`PERSONNEL_AMKA`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT `chk_lab_exams_cost` CHECK (cost >= 0),
-    CONSTRAINT `chk_lab_exams_date` CHECK (date <= NOW())
+    CONSTRAINT `chk_lab_exams_cost` CHECK (cost >= 0)
+
 ) ENGINE = InnoDB;
 
 -- -----------------------------------------------------
@@ -449,7 +449,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`DRUG_has_Active_Substance` (
     CONSTRAINT `fk_DRUG_has_Active_Substance_Active_Substance1` FOREIGN KEY (
         `Active_Substance_substance_id`
     ) REFERENCES `mydb`.`Active_Substance` (`substance_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE = InnoDB;D
+) ENGINE = InnoDB;
 
 -- -----------------------------------------------------
 -- Table `mydb`.`Patient_Allergy`
@@ -865,8 +865,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Doctor has exceeded his maximum shifts for this month';
   END IF;  
 END
-/
-/
+//
 
 CREATE Trigger `superseded_shifts_nurse` BEFORE INSERT ON `Nurse_has_Shift` FOR EACH ROW
 BEGIN 
@@ -963,8 +962,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Nurse has exceeded his maximum shifts for this month';
   END IF;  
 END
-/
-/
+//
 
 CREATE Trigger `superseded_shifts_adm` BEFORE INSERT ON `Administrative_Staff_has_Shift` FOR EACH ROW
 BEGIN 
@@ -1060,8 +1058,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Administrative employee has exceeded his maximum shifts for this month';
   END IF;  
 END
-/
-/
+//
 
 CREATE Trigger `room_availability` BEFORE INSERT ON `Medical_Procedures` FOR EACH ROW
 BEGIN
@@ -1091,8 +1088,124 @@ BEGIN
     SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Room is unavailable for this procedure';
   END IF;  
-END
-/
-/
+END //
+
+--Trigger: We calculate the base cost when we know entry and exit date
+CREATE TRIGGER `calculate_hospitalization_cost` 
+BEFORE INSERT ON `Hospitalization`
+FOR EACH ROW
+BEGIN
+    DECLARE base_cost_val DECIMAL(10, 2);
+    DECLARE avg_stay INT;
+    DECLARE extra_rate DECIMAL(10, 2);
+    DECLARE actual_stay INT;
+    DECLARE final_cost DECIMAL(10, 2);
+
+    IF NEW.exit_date IS NULL THEN 
+        SET NEW.total_cost = NULL;
+    ELSE
+        SELECT base_cost, avg_stay_days, extra_day_rate
+        INTO base_cost_val, avg_stay, extra_rate
+        FROM `KEN` WHERE ken_code = NEW.KEN_ken_code;
+
+        SET actual_stay = DATEDIFF(NEW.exit_date, NEW.entry_date);
+        SET final_cost = base_cost_val;
+
+        IF actual_stay > avg_stay THEN
+            SET final_cost = final_cost + (actual_stay - avg_stay) * extra_rate;
+        END IF;
+
+        SET NEW.total_cost = final_cost;
+    END IF;
+END //
+
+--Trigger: Calculate the cost when exit date takes a value(NOT NULL anymore)
+CREATE TRIGGER `calculate_hosp_cost_update`
+BEFORE UPDATE ON `Hospitalization`
+FOR EACH ROW
+BEGIN
+    DECLARE base_cost_val DECIMAL(10, 2);
+    DECLARE avg_stay INT;
+    DECLARE extra_rate DECIMAL(10, 2);
+    DECLARE actual_stay INT;
+    DECLARE final_cost DECIMAL(10, 2);
+
+    IF OLD.exit_date IS NULL AND NEW.exit_date IS NOT NULL THEN
+        SELECT base_cost, avg_stay_days, extra_day_rate
+        INTO base_cost_val, avg_stay, extra_rate
+        FROM `KEN` WHERE ken_code = NEW.KEN_ken_code;
+
+        SET actual_stay = DATEDIFF(NEW.exit_date, NEW.entry_date);
+        SET final_cost = base_cost_val;
+
+        IF actual_stay > avg_stay THEN
+            SET final_cost = final_cost + (actual_stay - avg_stay) * extra_rate;
+        END IF;
+
+        SET NEW.total_cost = final_cost;
+    END IF;
+END //
+
+--Trigger: Before insert a Hospitalization check if the chosen bed is available
+CREATE TRIGGER `bed_availability_before_hospitalization`
+BEFORE INSERT ON `Hospitalization`
+FOR EACH ROW
+BEGIN
+    DECLARE bed_status VARCHAR(45);
+    SELECT status INTO bed_status FROM BEDS
+    WHERE bed_id = NEW.BEDS_bed_id AND Department_dept_id = NEW.BEDS_Department_dept_id;
+    IF bed_status != 'Available' THEN
+        SIGNAL SQLSTATE '45000' 
+            SET MESSAGE_TEXT = 'Bed occupied or under maintenance';
+    END IF;
+END//
+
+--Trigger: After I insert a Hospitalization I want the bed to become unavailable
+CREATE TRIGGER `bed_status_after_hospitalization`
+AFTER INSERT ON `Hospitalization`
+FOR EACH ROW 
+BEGIN 
+    UPDATE BEDS
+    SET status = 'Occupied'
+    WHERE bed_id = NEW.BEDS_bed_id
+        AND Department_dept_id = NEW.BEDS_Department_dept_id;
+END//
+
+--Trigger: After I update a hospitalization I need the room to become available again
+CREATE TRIGGER `bed_after_discharge`
+AFTER UPDATE ON `Hospitalization`
+FOR EACH ROW
+BEGIN 
+    IF OLD.exit_date IS NULL AND NEW.exit_date IS NOT NULL THEN
+        UPDATE BEDS
+        SET status = 'Available'
+        WHERE bed_id = NEW.BEDS_bed_id 
+            AND Department_dept_id = NEW.BEDS_Department_dept_id;
+    END IF;
+END//
+
+--Trigger: We calculate the duration of medical_proc when start and end time are known
+CREATE TRIGGER `med_proc_duration`
+BEFORE INSERT ON `Medical_Procedures`
+FOR EACH ROW 
+BEGIN 
+    IF NEW.start_time IS NOT NULL AND NEW.end_time IS NOT NULL THEN 
+        SET NEW.duration = TIMESTAMPDIFF(MINUTE, NEW.start_time, NEW.end_time);
+    ELSE
+        SET NEW.duration = NULL;
+    END IF;
+END//
+
+--Trigger: We calculate the duration when end_time takes a value
+CREATE TRIGGER `med_proc_duration_update`
+BEFORE UPDATE ON `Medical_Procedures`
+FOR EACH ROW
+BEGIN
+    IF NEW.end_time IS NOT NULL THEN 
+        SET NEW.duration = TIMESTAMPDIFF(MINUTE, NEW.start_time, NEW.end_time);
+    ELSE 
+        SET NEW.duration = NULL;
+    END IF;
+END //
 
 DELIMITER ;
