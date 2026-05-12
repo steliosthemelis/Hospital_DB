@@ -78,30 +78,49 @@ LINES TERMINATED BY '\r'
 -- DRUG_ACTIVE_SUBSTANCE
 -- ==========================================
 
-DROP TABLE IF EXISTS temp_drug_active;
-
-CREATE TABLE temp_drug_active(
-    product_name VARCHAR(255),
-    active_substance VARCHAR(255)
+-- Temp table: drug_code -> drug_id mapping (same row order as DRUG_utf8.txt)
+DROP TABLE IF EXISTS temp_drug_codes;
+CREATE TABLE temp_drug_codes (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    drug_code VARCHAR(255)
 );
 
-LOAD DATA LOCAL INFILE 'C:/Users/ntoko/Hospital_DB/csv/DRUG_ACTIVE_utf8.txt'
+LOAD DATA LOCAL INFILE 'csv/DRUG_utf8.txt'
+INTO TABLE temp_drug_codes
+CHARACTER SET utf8mb4
+FIELDS TERMINATED BY '\t'
+OPTIONALLY ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(drug_code, @skip, @skip, @skip, @skip, @skip, @skip, @skip);
+
+-- Temp table: drug_code -> active_substance (tab-separated, no header)
+DROP TABLE IF EXISTS temp_drug_active;
+CREATE TABLE temp_drug_active (
+    drug_code VARCHAR(255),
+    active_substance VARCHAR(1000)
+);
+
+LOAD DATA LOCAL INFILE 'csv/DRUG_ACTIVE_utf8.txt'
 INTO TABLE temp_drug_active
 CHARACTER SET utf8mb4
 FIELDS TERMINATED BY '\t'
 OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\r'
-(product_name, active_substance);
+LINES TERMINATED BY '\n'
+(drug_code, active_substance);
 
-DELETE FROM temp_drug_active
-WHERE product_name LIKE '?%';
+DELETE FROM temp_drug_active WHERE drug_code LIKE '?%';
 
---INSERT IGNORE INTO DRUG_has_Active_Substance (DRUG_drug_id, Active_Substance_substance_id)
---SELECT d.drug_id, a.substance_id
---FROM temp_drug_active t
---JOIN DRUG d ON TRIM(LOWER(d.product_name)) = TRIM(LOWER(t.product_name))
---JOIN ACTIVE_SUBSTANCE a ON TRIM(LOWER(a.substance_name)) = TRIM(LOWER(t.active_substance));
+-- Join: drug_code -> drug_id, substance_name -> substance_id
+INSERT IGNORE INTO DRUG_has_Active_Substance (DRUG_drug_id, Active_Substance_substance_id)
+SELECT d.drug_id, a.substance_id
+FROM temp_drug_active t
+JOIN temp_drug_codes tc ON TRIM(LOWER(tc.drug_code)) = TRIM(LOWER(t.drug_code))
+JOIN DRUG d ON d.drug_id = tc.id
+JOIN Active_Substance a ON TRIM(LOWER(a.substance_name)) = TRIM(LOWER(t.active_substance));
 
+DROP TABLE IF EXISTS temp_drug_codes;
+DROP TABLE IF EXISTS temp_drug_active;
 
 SET FOREIGN_KEY_CHECKS = 1;
 

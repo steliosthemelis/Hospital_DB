@@ -66,27 +66,24 @@ substance_to_id = {}
 next_substance_id = 1
 current_drug_id = 1
 
-with open('csv/DRUG_ACTIVE_utf8.txt', 'r', encoding='utf-8') as f:
+with open('csv/DRUG_ACTIVE_utf8.txt', 'r', encoding='utf-8-sig') as f:
     for line in f:
-        line = line.strip()
+        line = line.rstrip('\r\n')
         if not line:
             continue
-        try:
-            parts = shlex.split(line)
-            if len(parts) >= 2:
-                raw_subs = parts[1].replace('|', ',')
-                sub_names = [s.strip() for s in raw_subs.split(',')]
-                drug_substances[current_drug_id] = set()
-                for name in sub_names:
-                    if name not in substance_to_id:
-                        substance_to_id[name] = next_substance_id
-                        next_substance_id += 1
-                    drug_substances[current_drug_id].add(substance_to_id[name])
-                current_drug_id += 1
-                if current_drug_id > 12235:
-                    break
-        except ValueError:
-            continue
+        parts = line.split('\t')
+        if len(parts) >= 2:
+            raw_subs = parts[1].strip().strip('"').replace('|', ',')
+            sub_names = [s.strip() for s in raw_subs.split(',') if s.strip()]
+            drug_substances[current_drug_id] = set()
+            for name in sub_names:
+                if name not in substance_to_id:
+                    substance_to_id[name] = next_substance_id
+                    next_substance_id += 1
+                drug_substances[current_drug_id].add(substance_to_id[name])
+            current_drug_id += 1
+            if current_drug_id > 12235:
+                break
 
 
 with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
