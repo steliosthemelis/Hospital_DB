@@ -27,3 +27,4 @@ WHERE
                 AND ahs.Shift_date = '2026-05-12'
                 AND ahs.Shift_Department_dept_id = 'akjsfhksjdf'
         );
+        
