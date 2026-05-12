@@ -320,18 +320,18 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         father_name = fake.first_name_male()
         if age < 15:
             weight = random.randint(75 + (age * 5), 85 + (age * 6))
-            height = random.randint(10 + (age * 2), 12 + (age * 3))
+            height = round((random.randint(10 + (age * 2), 12 + (age * 3))) / 100, 2)
         else:
             if gender == 'Male':
-                height = random.randint(165, 195)
+                height = round(random.randint(165, 195) / 100, 2)
                 weight = random.randint(65, 115)
             else:
-                height = random.randint(150, 180)
+                height = round(random.randint(150, 180) / 100, 2)
                 weight = random.randint(50, 95)
         address = fake.address()
         phone = fake.numerify("69########")
         email = fake.ascii_email()
-        job = fake.job()
+        job = fake.job()[:45]
         nationalities = ['Ελληνική', 'Αλβανική', 'Βρετανική', 'Γερμανική', 'Συριακή']
         nat_weights = [85, 5, 4, 3, 3]
         nationality = random.choices(nationalities, weights=nat_weights, k=1)[0]
@@ -539,7 +539,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
                 shift_date = today - timedelta(days=i)
                 dep_id = specialities[j]
                 line = f"('{shift_type}', '{shift_date}', '{dep_id}')"
-                if i == 29 and j == 14 and k == 2:
+                if i == 6 and j == 14 and k == 2:
                     f.write(line + ";\n\n")
                 else:
                     f.write(line + ",\n")
@@ -577,7 +577,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
                     person_schedule[amka][shift_date] = shift_types_list[k]
                     shift_doctors.setdefault((shift_types_list[k], shift_date, dep_id), []).append(amka)
                     line = f"('{amka}', '{shift_types_list[k]}', '{shift_date}', '{dep_id}')"
-                    if i == 29 and j == 14 and k == 2 and l == 2:
+                    if i == 6 and j == 14 and k == 2 and l == 2:
                         f.write(line + ";\n\n")
                     else:
                         f.write(line + ",\n")
@@ -602,7 +602,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
                     monthly_shifts[amka][(shift_date.year, shift_date.month)] = monthly_shifts[amka].get((shift_date.year, shift_date.month), 0) + 1
                     person_schedule[amka][shift_date] = shift_types_list[k]
                     line = f"('{amka}', '{shift_types_list[k]}', '{shift_date}', '{dep_id}')"
-                    if i == 29 and j == 14 and k == 2 and l == 5:
+                    if i == 6 and j == 14 and k == 2 and l == 5:
                         f.write(line + ";\n\n")
                     else:
                         f.write(line + ",\n")
@@ -627,7 +627,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
                     monthly_shifts[amka][(shift_date.year, shift_date.month)] = monthly_shifts[amka].get((shift_date.year, shift_date.month), 0) + 1
                     person_schedule[amka][shift_date] = shift_types_list[k]
                     line = f"('{amka}', '{shift_types_list[k]}', '{shift_date}', '{dep_id}')"
-                    if i == 29 and j == 14 and k == 2 and l == 1:
+                    if i == 6 and j == 14 and k == 2 and l == 1:
                         f.write(line + ";\n\n")
                     else:
                         f.write(line + ",\n")
