@@ -60,30 +60,42 @@ ken_codes = [
     'Θ09Μ', 'Υ25Μ', 'Λ04Μ', 'Σ02Χβ', 'Ι24Α'
 ]
 
-# Dictionaries for drug substance tracking
-drug_substances = {}
+# Build substance_name -> substance_id matching what load.sql inserts
+# (Active_Substance_split.txt loaded via TRUNCATE + AUTO_INCREMENT)
 substance_to_id = {}
-next_substance_id = 1
-current_drug_id = 1
+with open('csv/Active_Substance_split.txt', 'r', encoding='utf-8') as f:
+    for idx, line in enumerate(f, start=1):
+        name = line.rstrip('\r\n').strip().strip('"').lower()
+        if name:
+            substance_to_id[name] = idx
 
-with open('csv/DRUG_ACTIVE_utf8.txt', 'r', encoding='utf-8-sig') as f:
-    for line in f:
-        line = line.rstrip('\r\n')
-        if not line:
-            continue
-        parts = line.split('\t')
+all_substance_ids = list(substance_to_id.values())
+
+# Build product_name -> drug_id from DRUG_utf8.txt (skip header, col0=drug_code discarded)
+drug_id_by_name = {}
+with open('csv/DRUG_utf8.txt', 'r', encoding='utf-8-sig') as f:
+    next(f)
+    for idx, line in enumerate(f, start=1):
+        parts = line.rstrip('\r\n').split('\t')
         if len(parts) >= 2:
-            raw_subs = parts[1].strip().strip('"').replace('|', ',')
-            sub_names = [s.strip() for s in raw_subs.split(',') if s.strip()]
-            drug_substances[current_drug_id] = set()
-            for name in sub_names:
-                if name not in substance_to_id:
-                    substance_to_id[name] = next_substance_id
-                    next_substance_id += 1
-                drug_substances[current_drug_id].add(substance_to_id[name])
-            current_drug_id += 1
-            if current_drug_id > 12235:
-                break
+            product_name = parts[1].strip().strip('"').lower()
+            if product_name:
+                drug_id_by_name[product_name] = idx
+        if idx >= 12235:
+            break
+
+# Build drug_id -> set of substance_ids from DRUG_ACTIVE_split.txt
+drug_substances = {}
+with open('csv/DRUG_ACTIVE_split.txt', 'r', encoding='utf-8') as f:
+    for line in f:
+        parts = line.rstrip('\r\n').split('\t')
+        if len(parts) >= 2:
+            product_name = parts[0].strip().strip('"').lower()
+            substance    = parts[1].strip().strip('"').lower()
+            drug_id = drug_id_by_name.get(product_name)
+            sub_id  = substance_to_id.get(substance)
+            if drug_id is not None and sub_id is not None:
+                drug_substances.setdefault(drug_id, set()).add(sub_id)
 
 
 with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
@@ -370,7 +382,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         k = random.randint(0, 3)
         if k > 0:
             amka = patient_amkas[i]
-            sub_ids = random.sample(range(1, 12231), k)
+            sub_ids = random.sample(all_substance_ids, min(k, len(all_substance_ids)))
             for sub_id in sub_ids:
                 patient_allergies[amka].add(sub_id)
                 allergy_lines.append(f"('{amka}', {sub_id})")
