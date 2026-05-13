@@ -98,7 +98,8 @@ with open('csv/DRUG_ACTIVE_split.txt', 'r', encoding='utf-8-sig') as f:
 
 with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
     f.write("-- Αρχείο Φόρτωσης Δεδομένων Λειτουργίας\n")
-    f.write("USE `mydb`;\n\n")
+    f.write("USE `mydb`;\n")
+    f.write("SET NAMES utf8mb4;\n\n")
     f.write("SET FOREIGN_KEY_CHECKS = 0;\n")
     f.write("TRUNCATE TABLE `DoctorEvaluation`;\n")
     f.write("TRUNCATE TABLE `Perscription`;\n")
