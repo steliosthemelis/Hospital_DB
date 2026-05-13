@@ -10,7 +10,7 @@ config = {
     'charset': 'utf8mb4'
 }
 
-split_file = r'C:\Users\ntoko\Hospital_DB\csv\DRUG_ACTIVE_split.txt'
+split_file = 'csv/DRUG_ACTIVE_split.txt'
 
 def main():
     try:
