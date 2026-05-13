@@ -1,7 +1,6 @@
 from faker import Faker
 import random
 from datetime import datetime, timedelta, time
-import shlex
 
 fake = Faker('el_GR')
 
@@ -318,12 +317,11 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
 
     # room
 
-    f.write("INSERT INTO `ROOM` (`room_id`, `room_type`) VALUES\n")
+    f.write("INSERT INTO `ROOM` (`room_type`) VALUES\n")
 
     for i in range(10):
-        room_id = i
         room_type = random.choice(['Operating Room', 'Procedure Room'])
-        line = f"('{room_id}', '{room_type}')"
+        line = f"('{room_type}')"
         if i == 9:
             f.write(line + ";\n\n")
         else:
