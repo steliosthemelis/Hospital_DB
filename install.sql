@@ -1209,6 +1209,7 @@ DROP TRIGGER IF EXISTS `med_proc_duration_update`;
 DELIMITER //
 
 CREATE TRIGGER `med_proc_duration_update`
+BEFORE UPDATE ON `Medical_Procedures`
 FOR EACH ROW
 BEGIN
     IF NEW.end_time IS NOT NULL THEN 
