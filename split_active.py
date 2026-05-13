@@ -13,11 +13,11 @@ def detect_encoding(file_path):
     return 'utf-8'
 
 # Διαδρομές αρχείων
-input_drug_active = r'C:\Users\ntoko\Hospital_DB\csv\DRUG_ACTIVE_utf8.txt'
-output_drug_active_split = r'C:\Users\ntoko\Hospital_DB\csv\DRUG_ACTIVE_split.txt'
+input_drug_active = 'csv/DRUG_ACTIVE_utf8.txt'
+output_drug_active_split = 'csv/DRUG_ACTIVE_split.txt'
 
-input_active_substance = r'C:\Users\ntoko\Hospital_DB\csv\Active_Substance.txt'
-output_active_substance_split = r'C:\Users\ntoko\Hospital_DB\csv\Active_Substance_split.txt'
+input_active_substance = 'csv/Active_Substance.txt'
+output_active_substance_split = 'csv/Active_Substance_split.txt'
 
 # 1. Split DRUG_ACTIVE
 print("Processing DRUG_ACTIVE...")

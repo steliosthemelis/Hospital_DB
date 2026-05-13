@@ -16,12 +16,12 @@ SET AUTOCOMMIT = 0;
 -- ICD10 IMPORT
 -- ========================================
 
-LOAD DATA LOCAL INFILE 'C:/Users/ntoko/Hospital_DB/csv/icd10_utf8.txt'
+LOAD DATA LOCAL INFILE '/Users/steliosthemelis/Hospital_DB/csv/icd10_utf8.txt'
 INTO TABLE `mydb`.`ICD-10`
 CHARACTER SET utf8mb4
 FIELDS TERMINATED BY '\t'
 OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\r\n'
+LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
 (`ICD-10`, `Description`);
 
@@ -29,12 +29,12 @@ IGNORE 1 ROWS
 -- KEN IMPORT
 -- ========================================
 
-LOAD DATA LOCAL INFILE 'C:/Users/ntoko/Hospital_DB/csv/KEN_utf8.txt'
+LOAD DATA LOCAL INFILE '/Users/steliosthemelis/Hospital_DB/csv/KEN_utf8.txt'
 INTO TABLE `mydb`.`KEN`
 CHARACTER SET utf8mb4
 FIELDS TERMINATED BY '\t'
 OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\r'
+LINES TERMINATED BY '\n'
 (ken_code, description, @base_cost, @avg_stay_days)
 SET 
 `base_cost` = @base_cost,
@@ -46,12 +46,13 @@ SET
 -- DRUG
 -- ==========================================
 
-LOAD DATA LOCAL INFILE 'C:/Users/ntoko/Hospital_DB/csv/DRUG_utf8.txt'
+LOAD DATA LOCAL INFILE '/Users/steliosthemelis/Hospital_DB/csv/DRUG_utf8.txt'
 INTO TABLE `mydb`.`DRUG`
 CHARACTER SET utf8mb4
 FIELDS TERMINATED BY '\t'
 OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\r\n'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
 (
 @drug_id,
 product_name,
@@ -72,12 +73,12 @@ UPDATE DRUG SET product_name = TRIM(product_name) WHERE product_name LIKE ' %' O
 
 TRUNCATE TABLE Active_Substance;
 
-LOAD DATA LOCAL INFILE 'C:/Users/ntoko/Hospital_DB/csv/Active_Substance_split.txt'
-INTO TABLE `mydb`.`Active_Substance` 
+LOAD DATA LOCAL INFILE '/Users/steliosthemelis/Hospital_DB/csv/Active_Substance_split.txt'
+INTO TABLE `mydb`.`Active_Substance`
 CHARACTER SET utf8mb4
 FIELDS TERMINATED BY '\t'
 OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\r\n'
+LINES TERMINATED BY '\n'
 (substance_name);
 
 -- Trim substance names
@@ -98,12 +99,12 @@ CREATE TABLE temp_drug_active(
     INDEX idx_substance (active_substance(250))
 )ENGINE = MyISAM;
 
-LOAD DATA LOCAL INFILE 'C:/Users/ntoko/Hospital_DB/csv/DRUG_ACTIVE_split.txt'
+LOAD DATA LOCAL INFILE '/Users/steliosthemelis/Hospital_DB/csv/DRUG_ACTIVE_split.txt'
 INTO TABLE temp_drug_active
 CHARACTER SET utf8mb4
 FIELDS TERMINATED BY '\t'
 OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\r\n'
+LINES TERMINATED BY '\n'
 (product_name, active_substance);
 
 DELETE FROM temp_drug_active
