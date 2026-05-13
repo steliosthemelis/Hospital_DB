@@ -541,7 +541,7 @@ DROP TRIGGER IF EXISTS `patient_is_allergic`;
 
 DELIMITER //
 
-CREATE Trigger `patient_is_allergic` BEFORE INSERT ON `Perscription` FOR EACH ROW
+CREATE TRIGGER `patient_is_allergic` BEFORE INSERT ON `Perscription` FOR EACH ROW
 BEGIN
   DECLARE is_allergic INT;
 
@@ -557,8 +557,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Patient is allergic to this medication';
   END IF;
 END
-/
-/
+//
 
 DELIMITER ;
 
@@ -581,8 +580,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Doctor supervisor is invalid';
   END IF; 
 END
-/
-/
+//
 
 DELIMITER ;
 
@@ -606,8 +604,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Shift will not have enough doctors';
   END IF;  
 END
-/
-/
+//
 
 DELIMITER ;
 
@@ -631,8 +628,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Shift will not have enough nurses';
   END IF;  
 END
-/
-/
+//
 
 DELIMITER ;
 
@@ -656,8 +652,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Shift will not have enough administrative staff';
   END IF;  
 END
-/
-/
+//
 
 DELIMITER ;
 
@@ -692,8 +687,7 @@ BEGIN
     END IF;
   END IF;  
 END
-/
-/
+//
 
 DELIMITER ;
 
@@ -795,8 +789,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Doctor has exceeded his maximum shifts for this month';
   END IF;  
 END
-/
-/
+//
 
 DELIMITER ;
 
@@ -899,8 +892,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Nurse has exceeded his maximum shifts for this month';
   END IF;  
 END
-/
-/
+//
 
 DELIMITER ;
 
@@ -1002,8 +994,7 @@ BEGIN
       SET MESSAGE_TEXT = 'Administrative employee has exceeded his maximum shifts for this month';
   END IF;  
 END
-/
-/
+//
 
 DELIMITER ;
 
@@ -1040,8 +1031,7 @@ BEGIN
         SET MESSAGE_TEXT = 'Room is unavailable for this procedure';
   END IF;  
 END
-/
-/
+//
 
 -- Trigger: We calculate the base cost when we know entry and exit date
 DELIMITER ;
@@ -1077,8 +1067,7 @@ BEGIN
         SET NEW.total_cost = final_cost;
     END IF;
 END
-/
-/
+//
 
 -- Trigger: Calculate the cost when exit date takes a value(NOT NULL anymore)
 DELIMITER ;
@@ -1112,8 +1101,7 @@ BEGIN
         SET NEW.total_cost = final_cost;
     END IF;
 END
-/
-/
+//
 
 -- Trigger: Before insert a Hospitalization check if the chosen bed is available
 DELIMITER ;
@@ -1126,20 +1114,18 @@ CREATE TRIGGER `bed_availability_before_hospitalization`
 BEFORE INSERT ON `Hospitalization`
 FOR EACH ROW
 BEGIN
-    DECLARE overlapping_days INT DEFAULT 0;
-    SELECT Count(*) INTO overlapping_days 
-    FROM `Hospitalization`
-    WHERE bed_id = NEW.BEDS_bed_id 
-    AND Department_dept_id = NEW.BEDS_Department_dept_id;
-    AND entry_date <= IFNULL(NEW.exit_date, '2099-12-31')
-    AND IFNULL(exit_date, '2099-12-31') >= NEW.entry_date;
-    IF overlapping_days > 0 THEN
-        SIGNAL SQLSTATE '45000' 
-            SET MESSAGE_TEXT = 'Bed occupied or under maintenance';
+    DECLARE overlapping INT DEFAULT 0;
+    SELECT COUNT(*) INTO overlapping
+    FROM `Hospitalization` h
+    WHERE h.BEDS_bed_id = NEW.BEDS_bed_id
+      AND h.BEDS_Department_dept_id = NEW.BEDS_Department_dept_id
+      AND (h.entry_date <= IFNULL(NEW.exit_date, '2099-12-31'))
+      AND (IFNULL(h.exit_date, '2099-12-31') >= NEW.entry_date);
+    IF overlapping > 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Bed is already occupied for the given time period';
     END IF;
-END
-/
-/
+END//
 
 -- Trigger: After I insert a Hospitalization I want the bed to become unavailable
 DELIMITER ;
@@ -1157,8 +1143,7 @@ BEGIN
     WHERE bed_id = NEW.BEDS_bed_id
         AND Department_dept_id = NEW.BEDS_Department_dept_id;
 END
-/
-/
+//
 
 -- Trigger: After I update a hospitalization I need the room to become available again
 DELIMITER ;
@@ -1178,8 +1163,7 @@ BEGIN
             AND Department_dept_id = NEW.BEDS_Department_dept_id;
     END IF;
 END
-/
-/
+//
 
 -- Trigger: We calculate the duration of medical_proc when start and end time are known
 DELIMITER ;
@@ -1198,8 +1182,7 @@ BEGIN
         SET NEW.duration = NULL;
     END IF;
 END
-/
-/
+//
 
 -- Trigger: We calculate the duration when end_time takes a value
 DELIMITER ;
@@ -1218,7 +1201,6 @@ BEGIN
         SET NEW.duration = NULL;
     END IF;
 END
-/
-/
+//
 
 DELIMITER ;
