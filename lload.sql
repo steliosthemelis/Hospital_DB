@@ -56,6 +56,8 @@ LINES TERMINATED BY '\n'
 
 UPDATE Active_Substance SET substance_name = TRIM(substance_name);
 
+UPDATE KEN SET ken_code = REPLACE(ken_code, CHAR(65279 USING utf8mb4), '');
+
 -- 5. Τέλος (DRUG_has_Active_Substance → τρέξε populate_mapping.py)
 SET FOREIGN_KEY_CHECKS = 1;
 SET UNIQUE_CHECKS = 1;

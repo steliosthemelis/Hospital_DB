@@ -61,6 +61,8 @@ LINES TERMINATED BY '\n'
 
 UPDATE Active_Substance SET substance_name = TRIM(substance_name) WHERE substance_name LIKE ' %' OR substance_name LIKE '% ';
 
+UPDATE KEN SET ken_code = REPLACE(ken_code, CHAR(65279 USING utf8mb4), '');
+
 -- ==========================================
 -- DRUG_ACTIVE_SUBSTANCE
 -- ==========================================
