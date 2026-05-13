@@ -71,22 +71,21 @@ with open('csv/Active_Substance_split.txt', 'r', encoding='utf-8') as f:
 
 all_substance_ids = list(substance_to_id.values())
 
-# Build product_name -> drug_id from DRUG_utf8.txt (skip header, col0=drug_code discarded)
+# Build drug_code -> drug_id from DRUG_utf8.txt (no header; col0=drug_code, AUTO_INCREMENT from 1)
 drug_id_by_name = {}
 with open('csv/DRUG_utf8.txt', 'r', encoding='utf-8-sig') as f:
-    next(f)
     for idx, line in enumerate(f, start=1):
         parts = line.rstrip('\r\n').split('\t')
-        if len(parts) >= 2:
-            product_name = parts[1].strip().strip('"').lower()
-            if product_name:
+        if len(parts) >= 1:
+            product_name = parts[0].strip().strip('"').lower()
+            if product_name and product_name not in drug_id_by_name:
                 drug_id_by_name[product_name] = idx
         if idx >= 12235:
             break
 
 # Build drug_id -> set of substance_ids from DRUG_ACTIVE_split.txt
 drug_substances = {}
-with open('csv/DRUG_ACTIVE_split.txt', 'r', encoding='utf-8') as f:
+with open('csv/DRUG_ACTIVE_split.txt', 'r', encoding='utf-8-sig') as f:
     for line in f:
         parts = line.rstrip('\r\n').split('\t')
         if len(parts) >= 2:
