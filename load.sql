@@ -46,6 +46,7 @@ SET
 -- DRUG
 -- ==========================================
 
+TRUNCATE DRUG;
 LOAD DATA LOCAL INFILE 'C:/Users/ntoko/Hospital_DB/csv/DRUG_utf8.txt'
 INTO TABLE `mydb`.`DRUG`
 CHARACTER SET utf8mb4
@@ -53,7 +54,6 @@ FIELDS TERMINATED BY '\t'
 OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\r\n'
 (
-@drug_id,
 product_name,
 @active_substance,
 route_of_admin,
@@ -81,7 +81,7 @@ LINES TERMINATED BY '\r\n'
 (substance_name);
 
 -- Trim substance names
-UPDATE Active_Substance SET substance_name = TRIM(substance_name) WHERE substance_name LIKE ' %' OR substance_name LIKE '% ';
+UPDATE Active_Substance SET substance_name = TRIM(substance_name);
 
 -- ==========================================
 -- DRUG_ACTIVE_SUBSTANCE
@@ -98,7 +98,7 @@ CREATE TABLE temp_drug_active(
     INDEX idx_substance (active_substance(250))
 )ENGINE = MyISAM;
 
-LOAD DATA LOCAL INFILE 'C:/Users/ntoko/Hospital_DB/csv/DRUG_ACTIVE_split.txt'
+LOAD DATA LOCAL INFILE 'C:/Users/ntoko/Hospital_DB/csv/DRUG_ACTIVE_utf8.txt'
 INTO TABLE temp_drug_active
 CHARACTER SET utf8mb4
 FIELDS TERMINATED BY '\t'

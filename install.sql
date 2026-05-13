@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`DOCTOR` (
     `specialty` VARCHAR(50) NOT NULL,
     `Grade` VARCHAR(30) NOT NULL CHECK (Grade IN ('Intern', 'Supervisor B', 'Supervisor A', 'Director')),
     `PERSONNEL_AMKA` CHAR(11) NOT NULL,
-    `Supervisor_AMKA` CHAR(11) NOT NULL,
+    `Supervisor_AMKA` CHAR(11) NULL,
     PRIMARY KEY (`PERSONNEL_AMKA`),
     INDEX `Supervisor_AMKA_idx` (`Supervisor_AMKA` ASC),
     UNIQUE INDEX `license_number_UNIQUE` (`license_number` ASC),
