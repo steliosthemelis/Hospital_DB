@@ -1,26 +1,30 @@
 from faker import Faker
 import random
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, date
 
 fake = Faker('el_GR')
 
 
 def can_assign(amka, shift_type, shift_date, person_schedule, person_monthly, monthly_cap):
     result = True
+    shifts_today = person_schedule[amka].get(shift_date, set())
+    # Block same shift type twice on the same day (across depts) to avoid trigger row-count issues
+    if shift_type in shifts_today:
+        return False
     if shift_type == 'Morning':
         date_to_check = shift_date - timedelta(days=1)
-        if person_schedule[amka].get(date_to_check) == 'Night':
+        if 'Night' in person_schedule[amka].get(date_to_check, set()):
             result = False
     if shift_type == 'Afternoon':
-        if person_schedule[amka].get(shift_date) == 'Morning':
+        if 'Morning' in shifts_today:
             result = False
     if shift_type == 'Night':
-        if person_schedule[amka].get(shift_date) == 'Afternoon':
+        if 'Afternoon' in shifts_today:
             result = False
         night_shifts = True
         for i in range(1, 4):
             date_to_check = shift_date - timedelta(days=i)
-            night_shifts = night_shifts and (person_schedule[amka].get(date_to_check) == 'Night')
+            night_shifts = night_shifts and ('Night' in person_schedule[amka].get(date_to_check, set()))
         if night_shifts:
             result = False
     if person_monthly[amka].get((shift_date.year, shift_date.month), 0) + 1 > monthly_cap:
@@ -53,11 +57,15 @@ icd10_codes = [
     'S72.0', 'T07'
 ]
 
-ken_codes = [
-    'Ε01Α', 'Ν26Μ', 'Ο16Α', 'Α20Μ', 'Κ06Χ',
-    'Κ42Χ', 'Π12Μβ', 'Η41Μ', 'Μ27Χ', 'Δ01Χ',
-    'Θ09Μ', 'Υ25Μ', 'Λ04Μ', 'Σ02Χβ', 'Ι24Α'
-]
+ken_codes = []
+with open('csv/KEN_utf8.txt', 'r', encoding='utf-8-sig') as f:
+    for line in f:
+        parts = line.rstrip('\r\n').split('\t')
+        if len(parts) >= 1:
+            code = parts[0].strip()
+            if code:
+                ken_codes.append(code)
+ken_codes = list(set(ken_codes))
 
 # Build substance_name -> substance_id matching what load.sql inserts
 # (Active_Substance_split.txt loaded via TRUNCATE + AUTO_INCREMENT)
@@ -96,7 +104,7 @@ with open('csv/DRUG_ACTIVE_split.txt', 'r', encoding='utf-8-sig') as f:
                 drug_substances.setdefault(drug_id, set()).add(sub_id)
 
 
-with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
+with open('sql/02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
     f.write("-- Αρχείο Φόρτωσης Δεδομένων Λειτουργίας\n")
     f.write("USE `mydb`;\n")
     f.write("SET NAMES utf8mb4;\n\n")
@@ -133,30 +141,46 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
     doctor_amkas = []
     nurse_amkas = []
     administrative_staff_amkas = []
+    used_emails = set()
+    used_amkas = set()
 
-    for i in range(80):
-        amka = fake.numerify('###########')
+    def unique_email():
+        e = fake.ascii_free_email()
+        while e in used_emails:
+            e = fake.ascii_free_email()
+        used_emails.add(e)
+        return e
+
+    def unique_amka():
+        a = fake.numerify('###########')
+        while a in used_amkas:
+            a = fake.numerify('###########')
+        used_amkas.add(a)
+        return a
+
+    for i in range(100):
+        amka = unique_amka()
         doctor_amkas.append(amka)
         name = fake.first_name()
         surname = fake.last_name()
         age = fake.random_int(min=18, max=65)
-        email = fake.ascii_free_email()
+        email = unique_email()
         phone = fake.numerify('69########')
         hire_date = fake.date_between(start_date='-10y', end_date='today')
         line = f"('{amka}', '{name}', '{surname}', '{age}', '{email}', '{phone}', '{hire_date}', 'Doctor')"
-        if i == 79:
+        if i == 99:
             f.write(line + ";\n\n")
         else:
             f.write(line + ",\n")
 
     f.write("INSERT INTO `PERSONNEL` (`AMKA`, `name`, `surname`, `age`, `email`, `phone`, `hire_date`, `personnel_type`) VALUES\n")
     for i in range(250):
-        amka = fake.numerify('###########')
+        amka = unique_amka()
         nurse_amkas.append(amka)
         name = fake.first_name()
         surname = fake.last_name()
         age = fake.random_int(min=18, max=65)
-        email = fake.ascii_free_email()
+        email = unique_email()
         phone = fake.numerify('69########')
         hire_date = fake.date_between(start_date='-10y', end_date='today')
         line = f"('{amka}', '{name}', '{surname}', '{age}', '{email}', '{phone}', '{hire_date}', 'Nurse')"
@@ -166,17 +190,17 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
             f.write(line + ",\n")
 
     f.write("INSERT INTO `PERSONNEL` (`AMKA`, `name`, `surname`, `age`, `email`, `phone`, `hire_date`, `personnel_type`) VALUES\n")
-    for i in range(40):
-        amka = fake.numerify('###########')
+    for i in range(70):
+        amka = unique_amka()
         administrative_staff_amkas.append(amka)
         name = fake.first_name()
         surname = fake.last_name()
         age = fake.random_int(min=18, max=65)
-        email = fake.ascii_free_email()
+        email = unique_email()
         phone = fake.numerify('69########')
         hire_date = fake.date_between(start_date='-10y', end_date='today')
         line = f"('{amka}', '{name}', '{surname}', '{age}', '{email}', '{phone}', '{hire_date}', 'Administrative_Staff')"
-        if i == 39:
+        if i == 69:
             f.write(line + ";\n\n")
         else:
             f.write(line + ",\n")
@@ -186,9 +210,9 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
     f.write("INSERT INTO `DOCTOR` (`license_number`, `specialty`, `Grade`, `PERSONNEL_AMKA`, `Supervisor_AMKA`) VALUES\n")
 
     directors    = doctor_amkas[0:15]
-    supervisor_a = doctor_amkas[15:30]
-    supervisor_b = doctor_amkas[30:50]
-    intern       = doctor_amkas[50:80]
+    supervisor_a = doctor_amkas[15:35]
+    supervisor_b = doctor_amkas[35:60]
+    intern       = doctor_amkas[60:100]
     doctor_speciality = []
 
     specialities = [
@@ -203,7 +227,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         line = f"('{licence_number}', '{specialities[i]}', 'Director', '{directors[i]}', NULL)"
         f.write(line + ",\n")
 
-    for i in range(15):
+    for i in range(20):
         licence_number = fake.numerify('########')
         speciality = random.choice(specialities)
         doctor_speciality.append(speciality)
@@ -211,7 +235,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         line = f"('{licence_number}', '{speciality}', 'Supervisor A', '{supervisor_a[i]}', '{supervisor}')"
         f.write(line + ",\n")
 
-    for i in range(20):
+    for i in range(25):
         licence_number = fake.numerify('########')
         speciality = random.choice(specialities)
         doctor_speciality.append(speciality)
@@ -219,13 +243,13 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         line = f"('{licence_number}', '{speciality}', 'Supervisor B', '{supervisor_b[i]}', '{supervisor}')"
         f.write(line + ",\n")
 
-    for i in range(30):
+    for i in range(40):
         licence_number = fake.numerify('########')
         speciality = random.choice(specialities)
         doctor_speciality.append(speciality)
         supervisor = random.choice(supervisor_b)
         line = f"('{licence_number}', '{speciality}', 'Intern', '{intern[i]}', '{supervisor}')"
-        if i == 29:
+        if i == 39:
             f.write(line + ";\n\n")
         else:
             f.write(line + ",\n")
@@ -306,12 +330,12 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
         'Γραμματέας Εξωτερικών Ιατρείων'
     ]
 
-    for i in range(40):
+    for i in range(70):
         duties = random.choice(admin_roles)
         amka = administrative_staff_amkas[i]
         dep_id = random.choice(specialities)
         line = f"('{duties}', '{amka}', '{dep_id}')"
-        if i == 39:
+        if i == 69:
             f.write(line + ";\n\n")
         else:
             f.write(line + ",\n")
@@ -335,7 +359,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
     patient_amkas = []
 
     for i in range(200):
-        amka = fake.numerify("###########")
+        amka = unique_amka()
         patient_amkas.append(amka)
         is_child = random.choices([True, False], weights=[20, 80], k=1)[0]
         if is_child:
@@ -416,13 +440,13 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
 
     f.write("INSERT INTO `DOCTOR_has_Department` (`DOCTOR_PERSONNEL_AMKA`, `Department_dept_id`) VALUES\n")
 
-    for i in range(80):
+    for i in range(100):
         amka = doctor_amkas[i]
         dep_id = doctor_speciality[i]
         doc_deps = {dep_id}
         line = f"('{amka}', '{dep_id}')"
         k = random.randint(0, 2)
-        if i == 79 and k == 0:
+        if i == 99 and k == 0:
             f.write(line + ";\n\n")
         else:
             f.write(line + ",\n")
@@ -432,7 +456,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
                 extra_dep = random.choice(specialities)
             doc_deps.add(extra_dep)
             line = f"('{amka}', '{extra_dep}')"
-            if i == 79 and j == k - 1:
+            if i == 99 and j == k - 1:
                 f.write(line + ";\n\n")
             else:
                 f.write(line + ",\n")
@@ -453,7 +477,7 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
             start_date = fake.date_between(start_date='-5y', end_date='today')
             is_active = random.choices([True, False], weights=[10, 90], k=1)[0]
             if is_active:
-                end_date = start_date + timedelta(days=365)
+                end_date = date(2099, 12, 31)
             else:
                 days_in_hospital = random.randint(1, 15)
                 end_date = start_date + timedelta(days=days_in_hospital)
@@ -591,25 +615,56 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
 
     f.write("INSERT INTO `DOCTOR_has_Shift` (`DOCTOR_PERSONNEL_AMKA`, `Shift_shift_type`, `Shift_date`, `Shift_Department_dept_id`) VALUES\n")
 
-    for i in range(7):
+    nurse_slot   = {}
+    admin_slot   = {}
+
+    high_rank_amkas = directors + supervisor_a
+
+    for i in range(6, -1, -1):
         for j in range(15):
             for k in range(3):
                 for l in range(3):
                     shift_date = today - timedelta(days=i)
                     dep_id = specialities[j]
-                    amka = random.choice(doctor_amkas)
-                    attempts = 0
-                    while not (can_assign(amka, shift_types_list[k], shift_date, person_schedule, monthly_shifts, 15)
-                               and can_assign_intern(amka, shift_types_list[k], shift_date, dep_id, shift_doctors, doctor_grade)):
-                        amka = random.choice(doctor_amkas)
-                        attempts += 1
-                        if attempts > 300:
-                            break
+                    slot_key = (shift_types_list[k], shift_date, dep_id)
+                    base_pool = high_rank_amkas if l == 0 else doctor_amkas
+                    stype = shift_types_list[k]
+                    prev_day = shift_date - timedelta(days=1)
+                    # Pre-filter: only keep doctors that pass can_assign (guarantees no DB trigger violation)
+                    eligible = [a for a in base_pool
+                                if can_assign(a, stype, shift_date, person_schedule, monthly_shifts, 15)
+                                and a not in shift_doctors.get(slot_key, [])]
+                    if not eligible:
+                        # Relax monthly cap but preserve the constraints the DB triggers actually check
+                        if stype == 'Morning':
+                            eligible = [a for a in base_pool
+                                        if 'Night' not in person_schedule[a].get(prev_day, set())
+                                        and a not in shift_doctors.get(slot_key, [])]
+                        elif stype == 'Night':
+                            eligible = [a for a in base_pool
+                                        if 'Night' not in person_schedule[a].get(shift_date, set())
+                                        and not all('Night' in person_schedule[a].get(shift_date - timedelta(days=n), set()) for n in range(1, 4))
+                                        and a not in shift_doctors.get(slot_key, [])]
+                        else:
+                            eligible = [a for a in base_pool if a not in shift_doctors.get(slot_key, [])]
+                    if not eligible:
+                        if stype == 'Morning':
+                            eligible = [a for a in base_pool
+                                        if 'Night' not in person_schedule[a].get(prev_day, set())]
+                        elif stype == 'Night':
+                            eligible = [a for a in base_pool
+                                        if 'Night' not in person_schedule[a].get(shift_date, set())]
+                        if not eligible:
+                            eligible = base_pool
+                    # Try to pick someone that also satisfies intern constraint (l=0 pool always satisfies it)
+                    intern_ok = [a for a in eligible
+                                 if can_assign_intern(a, stype, shift_date, dep_id, shift_doctors, doctor_grade)]
+                    amka = random.choice(intern_ok if intern_ok else eligible)
                     monthly_shifts[amka][(shift_date.year, shift_date.month)] = monthly_shifts[amka].get((shift_date.year, shift_date.month), 0) + 1
-                    person_schedule[amka][shift_date] = shift_types_list[k]
-                    shift_doctors.setdefault((shift_types_list[k], shift_date, dep_id), []).append(amka)
+                    person_schedule[amka].setdefault(shift_date, set()).add(shift_types_list[k])
+                    shift_doctors.setdefault(slot_key, []).append(amka)
                     line = f"('{amka}', '{shift_types_list[k]}', '{shift_date}', '{dep_id}')"
-                    if i == 6 and j == 14 and k == 2 and l == 2:
+                    if i == 0 and j == 14 and k == 2 and l == 2:
                         f.write(line + ";\n\n")
                     else:
                         f.write(line + ",\n")
@@ -618,23 +673,45 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
 
     f.write("INSERT INTO `Nurse_has_Shift` (`Nurse_PERSONNEL_AMKA`, `Shift_shift_type`, `Shift_date`, `Shift_Department_dept_id`) VALUES\n")
 
-    for i in range(7):
+    for i in range(6, -1, -1):
         for j in range(15):
             for k in range(3):
                 for l in range(6):
                     shift_date = today - timedelta(days=i)
                     dep_id = specialities[j]
-                    amka = random.choice(nurse_amkas)
-                    attempts = 0
-                    while not can_assign(amka, shift_types_list[k], shift_date, person_schedule, monthly_shifts, 20):
-                        amka = random.choice(nurse_amkas)
-                        attempts += 1
-                        if attempts > 300:
-                            break
+                    slot_key = (shift_types_list[k], shift_date, dep_id)
+                    stype_n = shift_types_list[k]
+                    prev_day_n = shift_date - timedelta(days=1)
+                    eligible = [a for a in nurse_amkas
+                                if can_assign(a, stype_n, shift_date, person_schedule, monthly_shifts, 20)
+                                and a not in nurse_slot.get(slot_key, [])]
+                    if not eligible:
+                        if stype_n == 'Morning':
+                            eligible = [a for a in nurse_amkas
+                                        if 'Night' not in person_schedule[a].get(prev_day_n, set())
+                                        and a not in nurse_slot.get(slot_key, [])]
+                        elif stype_n == 'Night':
+                            eligible = [a for a in nurse_amkas
+                                        if 'Night' not in person_schedule[a].get(shift_date, set())
+                                        and not all('Night' in person_schedule[a].get(shift_date - timedelta(days=n), set()) for n in range(1, 4))
+                                        and a not in nurse_slot.get(slot_key, [])]
+                        else:
+                            eligible = [a for a in nurse_amkas if a not in nurse_slot.get(slot_key, [])]
+                    if not eligible:
+                        if stype_n == 'Morning':
+                            eligible = [a for a in nurse_amkas
+                                        if 'Night' not in person_schedule[a].get(prev_day_n, set())]
+                        elif stype_n == 'Night':
+                            eligible = [a for a in nurse_amkas
+                                        if 'Night' not in person_schedule[a].get(shift_date, set())]
+                        if not eligible:
+                            eligible = nurse_amkas
+                    amka = random.choice(eligible)
                     monthly_shifts[amka][(shift_date.year, shift_date.month)] = monthly_shifts[amka].get((shift_date.year, shift_date.month), 0) + 1
-                    person_schedule[amka][shift_date] = shift_types_list[k]
+                    person_schedule[amka].setdefault(shift_date, set()).add(shift_types_list[k])
+                    nurse_slot.setdefault(slot_key, []).append(amka)
                     line = f"('{amka}', '{shift_types_list[k]}', '{shift_date}', '{dep_id}')"
-                    if i == 6 and j == 14 and k == 2 and l == 5:
+                    if i == 0 and j == 14 and k == 2 and l == 5:
                         f.write(line + ";\n\n")
                     else:
                         f.write(line + ",\n")
@@ -643,23 +720,45 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
 
     f.write("INSERT INTO `Administrative_Staff_has_Shift` (`Administrative_Staff_PERSONNEL_AMKA`, `Shift_shift_type`, `Shift_date`, `Shift_Department_dept_id`) VALUES\n")
 
-    for i in range(7):
+    for i in range(6, -1, -1):
         for j in range(15):
             for k in range(3):
                 for l in range(2):
                     shift_date = today - timedelta(days=i)
                     dep_id = specialities[j]
-                    amka = random.choice(administrative_staff_amkas)
-                    attempts = 0
-                    while not can_assign(amka, shift_types_list[k], shift_date, person_schedule, monthly_shifts, 25):
-                        amka = random.choice(administrative_staff_amkas)
-                        attempts += 1
-                        if attempts > 300:
-                            break
+                    slot_key = (shift_types_list[k], shift_date, dep_id)
+                    stype_a = shift_types_list[k]
+                    prev_day_a = shift_date - timedelta(days=1)
+                    eligible = [a for a in administrative_staff_amkas
+                                if can_assign(a, stype_a, shift_date, person_schedule, monthly_shifts, 25)
+                                and a not in admin_slot.get(slot_key, [])]
+                    if not eligible:
+                        if stype_a == 'Morning':
+                            eligible = [a for a in administrative_staff_amkas
+                                        if 'Night' not in person_schedule[a].get(prev_day_a, set())
+                                        and a not in admin_slot.get(slot_key, [])]
+                        elif stype_a == 'Night':
+                            eligible = [a for a in administrative_staff_amkas
+                                        if 'Night' not in person_schedule[a].get(shift_date, set())
+                                        and not all('Night' in person_schedule[a].get(shift_date - timedelta(days=n), set()) for n in range(1, 4))
+                                        and a not in admin_slot.get(slot_key, [])]
+                        else:
+                            eligible = [a for a in administrative_staff_amkas if a not in admin_slot.get(slot_key, [])]
+                    if not eligible:
+                        if stype_a == 'Morning':
+                            eligible = [a for a in administrative_staff_amkas
+                                        if 'Night' not in person_schedule[a].get(prev_day_a, set())]
+                        elif stype_a == 'Night':
+                            eligible = [a for a in administrative_staff_amkas
+                                        if 'Night' not in person_schedule[a].get(shift_date, set())]
+                        if not eligible:
+                            eligible = administrative_staff_amkas
+                    amka = random.choice(eligible)
                     monthly_shifts[amka][(shift_date.year, shift_date.month)] = monthly_shifts[amka].get((shift_date.year, shift_date.month), 0) + 1
-                    person_schedule[amka][shift_date] = shift_types_list[k]
+                    person_schedule[amka].setdefault(shift_date, set()).add(shift_types_list[k])
+                    admin_slot.setdefault(slot_key, []).append(amka)
                     line = f"('{amka}', '{shift_types_list[k]}', '{shift_date}', '{dep_id}')"
-                    if i == 6 and j == 14 and k == 2 and l == 1:
+                    if i == 0 and j == 14 and k == 2 and l == 1:
                         f.write(line + ";\n\n")
                     else:
                         f.write(line + ",\n")
@@ -829,7 +928,15 @@ with open('02_load_hospital_data.sql', 'w', encoding='utf-8') as f:
 
     f.write(",\n".join(proc_lines) + ";\n\n")
 
-    # procedure team
+    # procedure team (deduplicate before writing)
+    seen_proc_pairs = set()
+    deduped_proc_teams = []
+    for h in proc_teams:
+        pair = (h['proc'], h['amka'])
+        if pair not in seen_proc_pairs:
+            seen_proc_pairs.add(pair)
+            deduped_proc_teams.append(h)
+    proc_teams = deduped_proc_teams
 
     f.write("INSERT INTO `Procedure_Team` (`Medical_Procedures_procedure_id`, `PERSONNEL_AMKA`) VALUES\n")
 

@@ -8,6 +8,7 @@ SELECT
 FROM
     Hospitalization h
 JOIN Patient p ON h.Patient_AMKA = p.AMKA
+HAVING num_hospitalizations > 3 
 GROUP BY
     p.AMKA, h.BEDS_Department_dept_id
 ORDER BY

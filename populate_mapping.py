@@ -4,15 +4,16 @@ from mysql.connector import Error
 config = {
     'host': 'localhost',
     'user': 'root',
-    'password': '',
+    'password': '12345',
     'database': 'mydb',
     'charset': 'utf8mb4'
 }
 
-split_file = r'C:\Users\ntoko\Hospital_DB\csv\DRUG_ACTIVE_split.txt'
+split_file = 'csv/DRUG_ACTIVE_split.txt'
 batch_size = 50000
 
 def main():
+    conn = None
     try:
         conn = mysql.connector.connect(**config)
         cursor = conn.cursor()
